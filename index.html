@@ -485,9 +485,9 @@ function loadFBConfig() {
 function saveFBConfig(cfg) { localStorage.setItem(FB_CFG_KEY, JSON.stringify(cfg)); }
 
 function showLoginModal() {
-  const hasCfg = !!loadFBConfig();
-  document.getElementById('btnLoginModalGoogle').style.display = hasCfg ? '' : 'none';
-  document.getElementById('loginModalSetup').style.display    = hasCfg ? 'none' : '';
+  const hasFb = !!_fbAuth;
+  document.getElementById('btnLoginModalGoogle').style.display = hasFb ? '' : 'none';
+  document.getElementById('loginModalSetup').style.display    = hasFb ? 'none' : '';
   document.getElementById('loginModal').classList.add('open');
 }
 function hideLoginModal() {
