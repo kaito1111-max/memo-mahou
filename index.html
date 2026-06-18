@@ -507,8 +507,18 @@ function bindLoginModal() {
   });
 }
 
+const DEFAULT_FB_CFG = {
+  apiKey: "AIzaSyDfrcspZcFWT7pzqQbPrMm1CRwNRY0SiNk",
+  authDomain: "memo-no-maryoku.firebaseapp.com",
+  projectId: "memo-no-maryoku",
+  storageBucket: "memo-no-maryoku.firebasestorage.app",
+  messagingSenderId: "1069732500694",
+  appId: "1:1069732500694:web:eb718cf5526e511954a577",
+  measurementId: "G-FD9261QZFP"
+};
+
 function initFirebase() {
-  const cfg = loadFBConfig();
+  const cfg = loadFBConfig() || DEFAULT_FB_CFG;
   if (!cfg || !cfg.projectId) return false;
   try {
     if (!firebase.apps.length) {
