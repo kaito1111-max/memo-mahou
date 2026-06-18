@@ -295,6 +295,100 @@
     .insight-actions { padding:14px 22px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
     .ai-generating { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; gap:16px; }
     .ai-generating p { font-size:14px; color:var(--light); }
+
+    /* ── HAMBURGER ── */
+    .hamburger { display:none; flex-direction:column; justify-content:center; gap:5px; padding:8px; background:none; border:none; cursor:pointer; flex-shrink:0; }
+    .hamburger span { display:block; width:20px; height:2px; background:var(--text); border-radius:2px; transition:all .2s; }
+    .backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:99; }
+    .backdrop.show { display:block; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      :root { --sw: 260px; }
+
+      /* Sidebar: slide-in drawer */
+      #sidebar { position:fixed; left:calc(-1 * var(--sw)); top:0; height:100%; z-index:100; transition:left .28s cubic-bezier(.4,0,.2,1); box-shadow: 4px 0 20px rgba(0,0,0,.2); }
+      #sidebar.open { left:0; }
+      .hamburger { display:flex; }
+
+      /* Main takes full width */
+      body { flex-direction:column; }
+      #main { width:100%; }
+      .main-head { padding:10px 14px; gap:8px; }
+      .main-head-l { gap:6px; overflow:hidden; }
+      .head-title { font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .head-sub   { font-size:10px; }
+      .main-body  { padding:14px; }
+
+      /* Buttons smaller */
+      .btn { padding:7px 12px; font-size:12px; }
+      .btn-back { padding:5px 10px; font-size:12px; }
+
+      /* Card grid: single column */
+      .card-grid { grid-template-columns:1fr; gap:10px; }
+      .memo-card { padding:14px; }
+
+      /* Editor meta: stack */
+      .meta-row { flex-direction:column; align-items:stretch; }
+      .mi-date  { width:100%; }
+      .mi-genre { width:100%; }
+      .mi-title { font-size:15px; }
+      .editor-meta { padding:14px; }
+
+      /* Fact table → block layout */
+      .tbl-wrap { border-radius:8px; }
+      .fact-tbl thead { display:none; }
+      .fact-tbl, .fact-tbl tbody { display:block; }
+      .fact-row { display:block; border-bottom:2px solid var(--border); }
+      .fact-row td { display:block; width:100% !important; border:none !important; border-bottom:1px solid #f0f2f5 !important; background:var(--white) !important; padding:9px 14px; }
+      .fact-row td.td-clr { background:var(--bg) !important; padding:8px 14px; display:flex; align-items:center; justify-content:space-between; }
+      .clr-btns { flex-direction:row; gap:10px; }
+      .clr-btn  { width:22px; height:22px; }
+      .fact-row td.td-abs { background:#f7f8ff !important; }
+      .fact-row td.td-app { background:#fff8f8 !important; }
+      .fact-row td:not(.td-clr)::before { display:block; font-size:10px; font-weight:700; color:var(--muted); letter-spacing:.5px; margin-bottom:4px; text-transform:uppercase; }
+      .fact-row td.td-hyogo::before { content:'標語'; }
+      .fact-row td.td-fact::before  { content:'📌 ファクト'; }
+      .fact-row td.td-abs::before   { content:'💡 抽象化'; }
+      .fact-row td.td-app::before   { content:'🚀 転用'; }
+      .clr-legend { flex-wrap:wrap; gap:8px; font-size:10px; }
+
+      /* Action bars */
+      .action-bar, .q-action-bar, .insight-actions { flex-wrap:wrap; gap:7px; }
+      .action-bar .btn, .q-action-bar .btn { flex:1; min-width:calc(50% - 4px); justify-content:center; }
+
+      /* Analysis */
+      .analysis-top-card { padding:16px; }
+      .category-row { padding:12px 14px; }
+      .cat-info h4 { font-size:13px; }
+
+      /* Session */
+      .session-wrap { max-width:100%; }
+      .session-q-text { font-size:16px; }
+      .session-q-card { padding:18px; }
+      .input-card { padding:14px; }
+      .ai-result-grid { grid-template-columns:1fr; }
+
+      /* Intake */
+      .intake-msgs { max-height:200px; }
+      .intake-input-row { padding:8px 12px; }
+
+      /* Insight */
+      .insight-body { padding:16px; font-size:13px; }
+
+      /* Settings */
+      .settings-wrap { max-width:100%; }
+      .settings-card { padding:16px 18px; }
+
+      /* Chat */
+      .chat-bubble { max-width:90%; font-size:12.5px; }
+    }
+
+    @media (max-width: 400px) {
+      .main-body { padding:10px; }
+      .session-q-text { font-size:15px; }
+      .ai-session-card p { display:none; }
+    }
   </style>
 </head>
 <body>
@@ -314,10 +408,17 @@
   </div>
 </div>
 
+<div class="backdrop" id="backdrop"></div>
+
 <!-- ── MAIN ── -->
 <div id="main">
   <div class="main-head">
-    <div class="main-head-l" id="headL"><div><div class="head-title" id="headTitle">すべてのメモ</div><div class="head-sub" id="headSub">—</div></div></div>
+    <button class="hamburger" id="btnMenu" aria-label="メニュー">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="main-head-l" id="headL">
+      <div><div class="head-title" id="headTitle">すべてのメモ</div><div class="head-sub" id="headSub">—</div></div>
+    </div>
     <div class="main-head-r" id="headR"></div>
   </div>
   <div class="main-body" id="mainBody"></div>
@@ -1120,6 +1221,17 @@ document.getElementById('btnAddGenre').addEventListener('click', addGenre);
 document.getElementById('btnCloseGenre').addEventListener('click', closeGenreModal);
 document.getElementById('genreInput').addEventListener('keydown', e=>{ if(e.key==='Enter')addGenre(); if(e.key==='Escape')closeGenreModal(); });
 document.getElementById('genreModal').addEventListener('click', e=>{ if(e.target===e.currentTarget)closeGenreModal(); });
+
+/* ─── SIDEBAR TOGGLE (mobile) ───── */
+function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('backdrop').classList.add('show'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('backdrop').classList.remove('show'); }
+document.getElementById('btnMenu').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.contains('open') ? closeSidebar() : openSidebar();
+});
+document.getElementById('backdrop').addEventListener('click', closeSidebar);
+// Close sidebar on nav tap (mobile)
+document.getElementById('sbNav').addEventListener('click', () => { if (window.innerWidth <= 768) closeSidebar(); });
+document.getElementById('btnNew').addEventListener('click', () => { if (window.innerWidth <= 768) closeSidebar(); });
 
 /* ─── KEYBOARD ─────────────────── */
 document.addEventListener('keydown', e => {
