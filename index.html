@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>メモの魔力</title>
+  <meta name="description" content="前田裕二式メモの魔力 — 標語・ファクト・抽象化・転用でAI自己分析">
+  <meta name="theme-color" content="#16213e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="メモの魔力">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --sw: 260px; --primary: #16213e; --accent: #e94560; --line: #06C755;
+      --bg: #f4f5f7; --white: #fff; --border: #e4e7ec; --text: #1a202c;
+      --muted: #a0aec0; --light: #718096; --col-abs: #f7f8ff; --col-app: #fff8f8;
+      --shadow: 0 1px 4px rgba(0,0,0,.08); --shadow-lg: 0 4px 16px rgba(0,0,0,.12);
+      --r: 10px; --green: #38a169; --blue: #3182ce; --red: #e53e3e;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic UI', 'Meiryo', sans-serif;
+      background: var(--bg); color: var(--text);
+      display: flex; height: 100vh; overflow: hidden; font-size: 14px;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar { width: var(--sw); background: var(--primary); display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden; }
+    .sb-logo { padding: 18px 16px 14px; border-bottom: 1px solid rgba(255,255,255,.07); }
+    .sb-logo h1 { font-size: 16px; font-weight: 700; color: #fff; }
+    .sb-logo p  { font-size: 10px; color: rgba(255,255,255,.35); margin-top: 2px; letter-spacing: 1.5px; }
+    .sb-search { padding: 10px 13px; border-bottom: 1px solid rgba(255,255,255,.07); }
+    .sb-search input {
+      width: 100%; padding: 6px 10px 6px 28px;
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 20px; color: #fff; font-size: 12px; outline: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,.35)' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: 9px center; transition: background-color .15s;
+    }
+    .sb-search input::placeholder { color: rgba(255,255,255,.3); }
+    .sb-search input:focus { background-color: rgba(255,255,255,.12); }
+    .sb-nav { flex: 1; overflow-y: auto; padding: 4px 0 10px; }
+    .sb-nav::-webkit-scrollbar { width: 3px; }
+    .sb-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 2px; }
+    .nav-section { padding: 13px 15px 3px; font-size: 9px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,.25); text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 15px; cursor: pointer; font-size: 12.5px; color: rgba(255,255,255,.68); border-left: 3px solid transparent; transition: all .12s; user-select: none; }
+    .nav-item:hover { background: rgba(255,255,255,.06); color: #fff; }
+    .nav-item.active { background: rgba(233,69,96,.16); border-left-color: var(--accent); color: #fff; }
+    .nav-label { display: flex; align-items: center; gap: 7px; overflow: hidden; }
+    .nav-label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .nav-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .nav-count { font-size: 10px; background: rgba(255,255,255,.1); padding: 1px 7px; border-radius: 10px; color: rgba(255,255,255,.45); flex-shrink: 0; }
+    .nav-divider { height: 1px; background: rgba(255,255,255,.07); margin: 6px 0; }
+    .sb-foot { padding: 11px 13px; border-top: 1px solid rgba(255,255,255,.07); }
+    .btn-new { width: 100%; padding: 10px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity .15s; font-family: inherit; }
+    .btn-new:hover { opacity: .88; }
+
+    /* ── MAIN ── */
+    #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .main-head { background: var(--white); padding: 12px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; min-height: 58px; }
+    .main-head-l { display: flex; align-items: center; gap: 10px; }
+    .main-head-r { display: flex; align-items: center; gap: 8px; }
+    .head-title { font-size: 16px; font-weight: 700; }
+    .head-sub   { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .main-body  { flex: 1; overflow-y: auto; padding: 22px; }
+    .main-body::-webkit-scrollbar { width: 5px; }
+    .main-body::-webkit-scrollbar-thumb { background: #dde3eb; border-radius: 3px; }
+
+    /* ── BUTTONS ── */
+    .btn { padding: 8px 16px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: none; font-family: inherit; transition: all .14s; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-accent  { background: var(--accent); color: #fff; }
+    .btn-accent:hover { opacity: .88; }
+    .btn-ai      { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+    .btn-ai:hover { opacity: .88; }
+    .btn-line    { background: var(--line); color: #fff; }
+    .btn-line:hover { opacity: .88; }
+    .btn-ghost   { background: transparent; border: 1px solid var(--border); color: var(--light); }
+    .btn-ghost:hover { background: var(--bg); }
+    .btn-danger  { background: transparent; border: 1px solid #fc8181; color: #e53e3e; }
+    .btn-danger:hover { background: #e53e3e; color: #fff; }
+    .btn-back { display: inline-flex; align-items: center; gap: 5px; padding: 6px 13px; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; font-size: 12.5px; cursor: pointer; color: var(--light); transition: all .12s; font-family: inherit; }
+    .btn-back:hover { background: var(--border); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    /* ── CARD GRID ── */
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+    .memo-card { background: var(--white); border-radius: var(--r); padding: 16px 18px; border: 1px solid var(--border); cursor: pointer; transition: all .15s; box-shadow: var(--shadow); }
+    .memo-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); border-color: #d4d8e0; }
+    .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+    .card-title { font-size: 14px; font-weight: 600; flex: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .card-gtag { font-size: 10.5px; padding: 2px 8px; border-radius: 11px; white-space: nowrap; flex-shrink: 0; font-weight: 500; }
+    .card-date { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+    .card-preview { font-size: 12px; color: var(--light); line-height: 1.65; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+    .card-foot { margin-top: 11px; padding-top: 9px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .card-rows { font-size: 11px; color: var(--muted); }
+    .color-dots { display: flex; gap: 3px; }
+    .cdot { width: 7px; height: 7px; border-radius: 50%; }
+
+    /* ── EMPTY STATE ── */
+    .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 70px 20px; text-align: center; color: var(--muted); }
+    .empty-icon { font-size: 52px; margin-bottom: 18px; }
+    .empty h2 { font-size: 18px; color: var(--light); margin-bottom: 8px; }
+    .empty p  { font-size: 13px; line-height: 1.7; max-width: 300px; }
+
+    /* ── EDITOR ── */
+    .editor { max-width: 920px; margin: 0 auto; }
+    .editor-meta { background: var(--white); border-radius: var(--r); padding: 18px 22px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 14px; }
+    .meta-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .mi { padding: 7px 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; outline: none; font-family: inherit; transition: border-color .15s, box-shadow .15s; background: var(--white); color: var(--text); }
+    .mi:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(233,69,96,.08); }
+    .mi-date  { width: 148px; }
+    .mi-genre { min-width: 110px; }
+    .mi-title { flex: 1; font-size: 17px; font-weight: 600; min-width: 180px; padding: 8px 12px; }
+    .tbl-wrap { background: var(--white); border-radius: var(--r); border: 1px solid var(--border); overflow: hidden; margin-bottom: 12px; box-shadow: var(--shadow); }
+    .fact-tbl { width: 100%; border-collapse: collapse; }
+    .fact-tbl thead th { background: var(--primary); color: #fff; padding: 10px 14px; font-size: 11.5px; font-weight: 600; text-align: left; letter-spacing: .3px; }
+    .fact-tbl thead th small { display: block; font-size: 9.5px; font-weight: 400; color: rgba(255,255,255,.45); margin-top: 1px; }
+    .col-clr   { width: 38px; border-right: 1px solid rgba(255,255,255,.08); }
+    .col-hyogo { width: 14%; border-right: 1px solid rgba(255,255,255,.08); }
+    .col-fact  { width: 34%; border-right: 1px solid rgba(255,255,255,.08); }
+    .col-abs   { width: 26%; border-right: 1px solid rgba(255,255,255,.08); }
+    .col-app   { width: 26%; }
+    .fact-row { transition: background .1s; }
+    .fact-row:not(:last-child) td { border-bottom: 1px solid var(--border); }
+    .fact-row:hover { background: #fafbfc; }
+    .fact-row td { padding: 9px 13px; vertical-align: top; }
+    .fact-row td.td-clr  { padding: 10px 6px; text-align: center; border-right: 1px solid var(--border); }
+    .fact-row td.td-hyogo { border-right: 1px solid var(--border); }
+    .fact-row td.td-fact  { border-right: 1px solid var(--border); }
+    .fact-row td.td-abs   { background: var(--col-abs); border-right: 1px solid var(--border); }
+    .fact-row td.td-app   { background: var(--col-app); }
+    .row-num { font-size: 9.5px; color: var(--muted); margin-bottom: 3px; display: flex; align-items: center; justify-content: space-between; }
+    .btn-del { background: none; border: none; color: #cbd5e0; cursor: pointer; font-size: 14px; padding: 0 2px; line-height: 1; transition: color .12s; }
+    .btn-del:hover { color: var(--accent); }
+    .rta { width: 100%; border: none; outline: none; resize: none; font-size: 12.5px; line-height: 1.75; background: transparent; font-family: inherit; color: var(--text); min-height: 64px; overflow: hidden; }
+    .rta::placeholder { color: #c8d4e0; }
+    .clr-btns { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+    .clr-btn { width: 18px; height: 18px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: all .12s; flex-shrink: 0; }
+    .clr-btn:hover { transform: scale(1.2); }
+    .clr-btn.sel { border-color: var(--text); box-shadow: 0 0 0 2px var(--white) inset; }
+    .clr-btn.green { background: var(--green); }
+    .clr-btn.blue  { background: var(--blue); }
+    .clr-btn.red   { background: var(--red); }
+    .btn-add-row { width: 100%; padding: 10px; background: none; border: 2px dashed var(--border); border-radius: 8px; color: var(--muted); cursor: pointer; font-size: 12.5px; font-family: inherit; transition: all .15s; margin-bottom: 14px; }
+    .btn-add-row:hover { border-color: var(--accent); color: var(--accent); background: rgba(233,69,96,.04); }
+    .action-bar { display: flex; justify-content: flex-end; gap: 9px; }
+    .clr-legend { display: flex; gap: 14px; align-items: center; padding: 6px 14px; background: #f9fafb; border-top: 1px solid var(--border); font-size: 11px; color: var(--light); }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+    .legend-dot  { width: 10px; height: 10px; border-radius: 50%; }
+
+    /* ── ANALYSIS VIEW ── */
+    .analysis-wrap { max-width: 760px; margin: 0 auto; }
+    .analysis-top-card { background: var(--white); border-radius: var(--r); padding: 22px 26px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px; }
+    .analysis-top-card h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .analysis-top-card p  { font-size: 13px; color: var(--light); line-height: 1.6; }
+    .progress-bar-wrap { margin: 14px 0 6px; }
+    .progress-bar-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .progress-bar-fill  { height: 100%; background: linear-gradient(90deg, #667eea, var(--accent)); border-radius: 3px; transition: width .4s; }
+    .progress-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .import-zone { border: 2px dashed var(--border); border-radius: 10px; padding: 28px; text-align: center; cursor: pointer; transition: all .15s; margin-bottom: 16px; }
+    .import-zone:hover { border-color: var(--accent); background: rgba(233,69,96,.03); }
+    .import-zone.drag { border-color: var(--accent); background: rgba(233,69,96,.06); }
+    .import-zone-icon { font-size: 32px; margin-bottom: 8px; }
+    .import-zone h3  { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .import-zone p   { font-size: 12px; color: var(--light); }
+    .import-zone input { display: none; }
+    .category-list { display: flex; flex-direction: column; gap: 8px; }
+    .category-row { background: var(--white); border-radius: var(--r); padding: 14px 18px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all .15s; box-shadow: var(--shadow); }
+    .category-row:hover { box-shadow: var(--shadow-lg); transform: translateX(2px); }
+    .cat-info h4 { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .cat-info p  { font-size: 11px; color: var(--muted); }
+    .cat-progress { display: flex; align-items: center; gap: 10px; }
+    .cat-badge { font-size: 12px; padding: 3px 10px; border-radius: 12px; font-weight: 600; }
+    .cat-badge.done   { background: #c6f6d5; color: #276749; }
+    .cat-badge.in-progress { background: #bee3f8; color: #2b6cb0; }
+    .cat-badge.todo   { background: var(--bg); color: var(--muted); }
+
+    /* ── QUESTION VIEW ── */
+    .q-view { max-width: 760px; margin: 0 auto; }
+    .q-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .q-nav-center { font-size: 12px; color: var(--muted); }
+    .q-card { background: var(--white); border-radius: var(--r); padding: 24px 28px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 14px; }
+    .q-number { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+    .q-text { font-size: 20px; font-weight: 700; line-height: 1.5; color: var(--text); }
+    .q-category { font-size: 11px; color: var(--muted); margin-top: 8px; }
+    .input-card { background: var(--white); border-radius: var(--r); padding: 20px 24px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 14px; }
+    .input-card label { display: block; font-size: 12px; font-weight: 600; color: var(--light); margin-bottom: 8px; letter-spacing: .5px; text-transform: uppercase; }
+    .fact-input { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; line-height: 1.7; resize: vertical; min-height: 90px; outline: none; font-family: inherit; transition: border-color .15s; }
+    .fact-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(233,69,96,.08); }
+    .ai-assist-bar { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+    .ai-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+    .ai-result-box { padding: 14px 16px; border-radius: 9px; border: 1px solid var(--border); }
+    .ai-result-box.abs-box { background: var(--col-abs); }
+    .ai-result-box.app-box { background: var(--col-app); }
+    .ai-result-label { font-size: 11px; font-weight: 700; color: var(--light); margin-bottom: 6px; letter-spacing: .5px; }
+    .ai-result-ta { width: 100%; border: none; outline: none; resize: none; background: transparent; font-size: 13px; line-height: 1.7; min-height: 60px; font-family: inherit; color: var(--text); overflow: hidden; }
+    .ai-thinking { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); padding: 10px 0; }
+    .ai-dots span { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: dot-pulse 1.2s infinite; }
+    .ai-dots span:nth-child(2) { animation-delay: .2s; }
+    .ai-dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes dot-pulse { 0%,80%,100%{opacity:.2;transform:scale(.8)} 40%{opacity:1;transform:scale(1)} }
+
+    /* ── CHAT PANEL ── */
+    .chat-card { background: var(--white); border-radius: var(--r); border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 14px; }
+    .chat-header { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; padding: 12px 18px; display: flex; align-items: center; gap: 10px; }
+    .chat-header h3 { font-size: 14px; font-weight: 600; }
+    .chat-header p  { font-size: 11px; opacity: .75; }
+    .chat-messages { padding: 14px 18px; max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .chat-messages::-webkit-scrollbar { width: 3px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .chat-bubble { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.6; }
+    .chat-bubble.ai { background: var(--bg); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .chat-bubble.user { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .chat-input-row { padding: 10px 14px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+    .chat-input { flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 20px; font-size: 13px; outline: none; font-family: inherit; }
+    .chat-input:focus { border-color: #764ba2; }
+    .chat-send { padding: 8px 14px; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none; border-radius: 20px; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: 600; }
+    .chat-send:hover { opacity: .88; }
+    .chat-send:disabled { opacity: .45; cursor: not-allowed; }
+    .q-action-bar { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
+    /* ── SETTINGS ── */
+    .settings-wrap { max-width: 560px; margin: 0 auto; }
+    .settings-card { background: var(--white); border-radius: var(--r); padding: 24px 28px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 14px; }
+    .settings-card h2 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+    .settings-card > p { font-size: 13px; color: var(--light); line-height: 1.6; margin-bottom: 20px; }
+    .setting-item { margin-bottom: 18px; }
+    .setting-item label { display: block; font-size: 12px; font-weight: 600; color: var(--light); margin-bottom: 7px; letter-spacing: .5px; text-transform: uppercase; }
+    .setting-row { display: flex; gap: 8px; align-items: center; }
+    .setting-hint { font-size: 12px; color: var(--muted); margin-top: 7px; line-height: 1.6; }
+    .setting-hint a { color: var(--accent); text-decoration: none; }
+    .setting-hint a:hover { text-decoration: underline; }
+    .setting-hint code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: 11px; }
+    .api-status { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 4px 10px; border-radius: 12px; margin-top: 8px; }
+    .api-status.ok  { background: #c6f6d5; color: #276749; }
+    .api-status.err { background: #fed7d7; color: #c53030; }
+    .format-example { background: var(--bg); border-radius: 8px; padding: 14px 16px; font-size: 12px; font-family: monospace; line-height: 1.8; color: var(--light); margin-top: 8px; border: 1px solid var(--border); }
+
+    /* ── TOAST ── */
+    .toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(16px); background: #2d3748; color: #fff; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; z-index: 9999; opacity: 0; pointer-events: none; transition: all .24s; white-space: nowrap; }
+    .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── MODAL ── */
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.42); display: none; align-items: center; justify-content: center; z-index: 500; }
+    .modal-bg.open { display: flex; }
+    .modal-box { background: var(--white); border-radius: 13px; padding: 22px; width: 330px; box-shadow: 0 20px 50px rgba(0,0,0,.18); }
+    .modal-box h3 { font-size: 15px; margin-bottom: 14px; }
+    .modal-input { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 7px; font-size: 14px; outline: none; font-family: inherit; margin-bottom: 13px; }
+    .modal-input:focus { border-color: var(--accent); }
+    .modal-btns { display: flex; gap: 8px; }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #dde3eb; border-radius: 3px; }
+
+    /* ── AI SESSION ── */
+    .ai-session-card { background: linear-gradient(135deg,#667eea,#764ba2); border-radius: var(--r); padding: 20px 24px; color:#fff; cursor:pointer; transition:all .15s; margin-bottom:14px; box-shadow:0 4px 20px rgba(102,126,234,.3); }
+    .ai-session-card:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(102,126,234,.42); }
+    .ai-session-card h3 { font-size:16px; font-weight:700; margin-bottom:5px; }
+    .ai-session-card p  { font-size:12.5px; opacity:.85; line-height:1.6; }
+    .ai-session-start { display:inline-flex; align-items:center; gap:6px; margin-top:14px; padding:9px 18px; background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.3); border-radius:8px; font-size:13px; font-weight:600; color:#fff; cursor:pointer; transition:all .15s; }
+    .ai-session-start:hover { background:rgba(255,255,255,.32); }
+
+    .divider-or { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:12px; margin:16px 0; }
+    .divider-or::before,.divider-or::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    .session-wrap { max-width:720px; margin:0 auto; }
+    .phase-label { font-size:10.5px; font-weight:700; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+    .phase-dot { width:8px; height:8px; border-radius:50%; background:linear-gradient(135deg,#667eea,#764ba2); }
+
+    .intake-card { background:var(--white); border-radius:var(--r); border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; margin-bottom:14px; }
+    .intake-head { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; padding:16px 22px; }
+    .intake-head h2 { font-size:15px; font-weight:700; }
+    .intake-head p  { font-size:12px; opacity:.75; margin-top:3px; }
+    .intake-msgs { padding:16px 20px; min-height:100px; max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; }
+    .intake-input-row { padding:10px 14px; border-top:1px solid var(--border); display:flex; gap:8px; align-items:flex-end; }
+    .intake-ta { flex:1; padding:9px 13px; border:1px solid var(--border); border-radius:8px; font-size:13px; outline:none; font-family:inherit; resize:none; min-height:44px; max-height:120px; overflow:auto; line-height:1.6; }
+    .intake-ta:focus { border-color:#764ba2; }
+
+    .session-q-card { background:var(--white); border-radius:var(--r); padding:24px 28px; border:1px solid var(--border); box-shadow:var(--shadow); margin-bottom:14px; }
+    .session-q-num  { font-size:11px; font-weight:700; color:#764ba2; letter-spacing:1px; margin-bottom:8px; }
+    .session-q-text { font-size:20px; font-weight:700; line-height:1.5; }
+    .session-progress { display:flex; gap:5px; margin-bottom:14px; }
+    .sp-dot { flex:1; height:4px; border-radius:2px; background:var(--border); transition:background .3s; }
+    .sp-dot.done { background:#764ba2; }
+    .sp-dot.current { background:linear-gradient(90deg,#667eea,#764ba2); }
+
+    .insight-card { background:var(--white); border-radius:var(--r); border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; margin-bottom:14px; }
+    .insight-head { background:linear-gradient(135deg,#f6d365,#fda085); padding:18px 24px; }
+    .insight-head h2 { font-size:16px; font-weight:700; color:#fff; }
+    .insight-body { padding:22px 26px; font-size:13.5px; line-height:1.85; color:var(--text); white-space:pre-wrap; }
+    .insight-actions { padding:14px 22px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
+    .ai-generating { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; gap:16px; }
+    .ai-generating p { font-size:14px; color:var(--light); }
+  </style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<div id="sidebar">
+  <div class="sb-logo">
+    <h1>✍️ メモの魔力</h1>
+    <p>MAGIC OF MEMOS</p>
+  </div>
+  <div class="sb-search">
+    <input id="searchInput" type="text" placeholder="メモを検索…" autocomplete="off">
+  </div>
+  <div class="sb-nav" id="sbNav"></div>
+  <div class="sb-foot">
+    <button class="btn-new" id="btnNew">＋ 新しいメモ</button>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div id="main">
+  <div class="main-head">
+    <div class="main-head-l" id="headL"><div><div class="head-title" id="headTitle">すべてのメモ</div><div class="head-sub" id="headSub">—</div></div></div>
+    <div class="main-head-r" id="headR"></div>
+  </div>
+  <div class="main-body" id="mainBody"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ── GENRE MODAL ── -->
+<div class="modal-bg" id="genreModal">
+  <div class="modal-box">
+    <h3>ジャンルを追加</h3>
+    <input class="modal-input" id="genreInput" type="text" placeholder="例：読書・ビジネス・映画…" maxlength="15">
+    <div class="modal-btns">
+      <button class="btn btn-primary" id="btnAddGenre" style="flex:1">追加</button>
+      <button class="btn btn-ghost"   id="btnCloseGenre">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ─── CONSTANTS ─────────────── */
+const SK = 'memo_mahou_v4';
+const DEFAULT_GENRES = ['ビジネス', '読書', '日常', 'アイデア', '学習'];
+const GCOLORS = { 'ビジネス':'#e94560','読書':'#38a169','日常':'#3182ce','アイデア':'#d69e2e','学習':'#805ad5','仕事':'#4a5568' };
+const CPAL = ['#e94560','#38a169','#3182ce','#d69e2e','#805ad5','#4a5568','#2b6cb0','#2c7a7b'];
+let gcache = {};
+const gc = g => GCOLORS[g] || (gcache[g] = gcache[g] || CPAL[Object.keys(gcache).length % CPAL.length]);
+
+/* ─── STORAGE ─────────────────── */
+function load() {
+  try { const r = localStorage.getItem(SK); if (r) return JSON.parse(r); } catch(_) {}
+  return { memos: [], genres: [...DEFAULT_GENRES], settings: { apiKey: '', apiProvider: 'groq', ollamaModel: 'llama3.2' }, questions: [], analyses: {} };
+}
+const persist = d => localStorage.setItem(SK, JSON.stringify(d));
+
+/* ─── STATE ───────────────────── */
+let db = load();
+// Ensure fields exist
+if (!db.settings)  db.settings  = { apiKey: '', apiProvider: 'groq', ollamaModel: 'llama3.2' };
+if (!db.questions) db.questions = [];
+if (!db.analyses)  db.analyses  = {};
+
+const S = {
+  view: 'list',       // 'list'|'edit'|'analysis-home'|'analysis-q'|'settings'
+  filter: 'all',
+  search: '',
+  memo: null,
+  analysisCategory: null,
+  analysisQIdx: 0,
+  chatHistory: [],
+  aiLoading: false,
+};
+
+/* ─── UTILS ───────────────────── */
+const uid  = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
+const now  = () => new Date().toISOString().slice(0,10);
+const esc  = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function fmtDate(d) {
+  if (!d) return ''; const dt = new Date(d+'T00:00:00');
+  return `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日（${'日月火水木金土'[dt.getDay()]}）`;
+}
+let _tt;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('on');
+  clearTimeout(_tt); _tt = setTimeout(() => el.classList.remove('on'), 2500);
+}
+function autoResize(ta) { ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; }
+function autoResizeAll() { document.querySelectorAll('.rta,.fact-input,.ai-result-ta').forEach(autoResize); }
+
+/* ─── AI CALL ─────────────────── */
+async function callAI(messages, onChunk) {
+  const { apiKey, apiProvider, ollamaModel } = db.settings;
+  const isOllama = apiProvider === 'ollama';
+  if (!isOllama && !apiKey) { toast('⚙️ 設定からAPIキーを登録してください'); return null; }
+
+  const url = isOllama
+    ? 'http://localhost:11434/v1/chat/completions'
+    : 'https://api.groq.com/openai/v1/chat/completions';
+
+  const body = {
+    model: isOllama ? (ollamaModel || 'llama3.2') : 'llama-3.3-70b-versatile',
+    messages,
+    temperature: 0.7,
+    max_tokens: 700,
+    stream: !!onChunk,
+  };
+
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (!isOllama) headers['Authorization'] = `Bearer ${apiKey}`;
+
+    const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`API Error ${res.status}: ${err.slice(0,200)}`);
+    }
+
+    if (onChunk) {
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let full = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        for (const line of dec.decode(value).split('\n')) {
+          if (!line.startsWith('data: ')) continue;
+          const d = line.slice(6).trim();
+          if (d === '[DONE]') break;
+          try { const j = JSON.parse(d); const t = j.choices[0]?.delta?.content||''; full += t; onChunk(full); } catch(_) {}
+        }
+      }
+      return full;
+    } else {
+      const j = await res.json();
+      return j.choices[0].message.content;
+    }
+  } catch(e) {
+    toast('AI接続エラー: ' + e.message);
+    console.error(e);
+    return null;
+  }
+}
+
+const PROMPT_ASSIST = `あなたは「メモの魔力」式の自己分析コーチです。
+ユーザーが自己分析の質問に対して書いたファクト（事実・体験・感情）から、以下を日本語で提案してください。
+
+【抽象化】この体験・感情の本質やパターン（2〜3文）
+【転用】この気づきを今後の人生・行動にどう活かすか（2〜3文）
+
+必ず「【抽象化】」と「【転用】」の見出しを付けて出力してください。`;
+
+const PROMPT_CHAT = `あなたは「メモの魔力」式の自己分析コーチです。
+ユーザーの回答に対し、さらに深い自己理解を引き出す鋭い問いかけを1つだけしてください。
+「なぜ？」「そのとき何を感じた？」「それがあなたに何を教えてくれた？」のような深掘り質問を1〜2文で。`;
+
+/* ─── SIDEBAR ─────────────────── */
+function renderSB() {
+  const byDate = {}, byGenre = {};
+  db.memos.forEach(m => { byDate[m.date]=(byDate[m.date]||0)+1; byGenre[m.genre]=(byGenre[m.genre]||0)+1; });
+  const dates = Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
+  const answered = Object.keys(db.analyses).length;
+  const total    = db.questions.length;
+
+  let html = '';
+  html += navI('all','📋','すべてのメモ', db.memos.length);
+  if (dates.length) {
+    html += `<div class="nav-section">日付別</div>`;
+    dates.forEach(d => { const dt=new Date(d+'T00:00:00'); html+=navI('date:'+d,'📅',`${dt.getMonth()+1}/${dt.getDate()}`,byDate[d]); });
+  }
+  html += `<div class="nav-section">ジャンル別</div>`;
+  db.genres.forEach(g => { html += navIG('genre:'+g, g, byGenre[g]||0); });
+  html += navI('__genre__','＋','ジャンルを追加', null);
+  html += `<div class="nav-divider"></div>`;
+  html += `<div class="nav-section">AI機能</div>`;
+  html += navI('analysis','🔍','自己分析モード', total ? `${answered}/${total}` : null);
+  function navI_isAnalysis() { return S.view==='analysis-home'||S.view==='analysis-q'||S.view==='ai-session'; }
+  html += navI('settings','⚙️','AI設定', null);
+
+  document.getElementById('sbNav').innerHTML = html;
+}
+function navI(key, icon, label, cnt) {
+  const act = (S.view === key || S.filter === key || (key==='analysis' && (S.view.startsWith('analysis')||S.view==='ai-session'))) ? ' active' : '';
+  const c   = cnt !== null && cnt !== undefined ? `<span class="nav-count">${cnt}</span>` : '';
+  return `<div class="nav-item${act}" data-nav="${key}"><div class="nav-label">${icon} <span>${esc(String(label))}</span></div>${c}</div>`;
+}
+function navIG(key, g, cnt) {
+  const act = S.filter===key?' active':'';
+  return `<div class="nav-item${act}" data-nav="${key}"><div class="nav-label"><span class="nav-dot" style="background:${gc(g)}"></span><span>${esc(g)}</span></div><span class="nav-count">${cnt}</span></div>`;
+}
+
+/* ─── HEADER ───────────────────── */
+function renderHead() {
+  const L = document.getElementById('headL');
+  const R = document.getElementById('headR');
+
+  if (S.view === 'edit') {
+    L.innerHTML=`<button class="btn-back" id="btnBack">← 戻る</button><div><div class="head-title">${S.memo._new?'新しいメモ':'メモを編集'}</div></div>`;
+    R.innerHTML=S.memo._new?'':`<button class="btn btn-line" id="btnShare">LINE共有</button><button class="btn btn-danger" id="btnDel">削除</button>`;
+    document.getElementById('btnBack')?.addEventListener('click', goList);
+    document.getElementById('btnShare')?.addEventListener('click', ()=>lineShare(S.memo.id));
+    document.getElementById('btnDel')?.addEventListener('click',   ()=>delMemo(S.memo.id));
+  } else if (S.view === 'analysis-q') {
+    const qs = categoryQuestions();
+    L.innerHTML=`<button class="btn-back" id="btnBack">← カテゴリ</button><div><div class="head-title">自己分析</div></div>`;
+    R.innerHTML=`<span style="font-size:12px;color:var(--muted)">${S.analysisQIdx+1} / ${qs.length}</span>`;
+    document.getElementById('btnBack')?.addEventListener('click', ()=>{ S.view='analysis-home'; renderSB(); renderHead(); renderAnalysisHome(); });
+  } else if (S.view === 'ai-session') {
+    const labels = {intake:'目的を教えてください',questions:'質問に答えましょう',insight:'インサイト'};
+    L.innerHTML=`<button class="btn-back" id="btnBack">← 自己分析</button><div><div class="head-title">🤖 AIセッション</div><div class="head-sub">${labels[AS.phase]||''}</div></div>`;
+    R.innerHTML='';
+    document.getElementById('btnBack')?.addEventListener('click',()=>{ S.view='analysis-home'; renderSB(); renderHead(); renderAnalysisHome(); });
+  } else if (S.view === 'analysis-home') {
+    L.innerHTML=`<div><div class="head-title">🔍 自己分析モード</div><div class="head-sub">${db.questions.length}問中 ${Object.keys(db.analyses).length}問 完了</div></div>`;
+    R.innerHTML='';
+  } else if (S.view === 'settings') {
+    L.innerHTML=`<div><div class="head-title">⚙️ AI設定</div></div>`;
+    R.innerHTML='';
+  } else {
+    let title='すべてのメモ'; const f=S.filter;
+    if (f.startsWith('date:')) title=fmtDate(f.replace('date:',''));
+    else if (f.startsWith('genre:')) title=f.replace('genre:','');
+    else if (f==='search') title=`「${S.search}」の検索結果`;
+    const n=filtered().length;
+    L.innerHTML=`<div><div class="head-title">${esc(title)}</div><div class="head-sub">${n}件</div></div>`;
+    R.innerHTML='';
+  }
+}
+
+/* ─── LIST ─────────────────────── */
+function filtered() {
+  let list=[...db.memos]; const f=S.filter;
+  if (f.startsWith('date:')) list=list.filter(m=>m.date===f.replace('date:',''));
+  else if (f.startsWith('genre:')) list=list.filter(m=>m.genre===f.replace('genre:',''));
+  else if (f==='search') { const q=S.search.toLowerCase(); list=list.filter(m=>[m.title,m.genre,...m.rows.flatMap(r=>[r.hyogo,r.fact,r.abs,r.app])].join(' ').toLowerCase().includes(q)); }
+  return list.sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt);
+}
+function renderList() {
+  const memos=filtered(), body=document.getElementById('mainBody');
+  if (!memos.length) { body.innerHTML=`<div class="empty"><div class="empty-icon">📓</div><h2>${S.filter==='all'?'さあ、メモを始めよう':'メモがありません'}</h2><p>標語・ファクト・抽象化・転用の4ステップで日常の気づきを価値に変えましょう。</p></div>`; return; }
+  body.innerHTML=`<div class="card-grid">${memos.map(cardHtml).join('')}</div>`;
+  body.querySelectorAll('.memo-card').forEach(c=>c.addEventListener('click',()=>openMemo(c.dataset.id)));
+}
+function cardHtml(m) {
+  const color=gc(m.genre);
+  const preview=m.rows.map(r=>r.hyogo||r.fact).filter(Boolean).join(' · ')||'（内容なし）';
+  const dots=[...new Set(m.rows.map(r=>r.clr).filter(Boolean))].map(c=>`<span class="cdot" style="background:var(--${c})"></span>`).join('');
+  return `<div class="memo-card" data-id="${m.id}"><div class="card-head"><div class="card-title">${esc(m.title||'無題のメモ')}</div><div class="card-gtag" style="background:${color}18;color:${color}">${esc(m.genre)}</div></div><div class="card-date">📅 ${fmtDate(m.date)}</div><div class="card-preview">${esc(preview)}</div><div class="card-foot"><span class="card-rows">${m.rows.length}行のメモ</span><div class="color-dots">${dots}</div></div></div>`;
+}
+
+/* ─── EDITOR ───────────────────── */
+function renderEdit() {
+  const m=S.memo, body=document.getElementById('mainBody');
+  const opts=db.genres.map(g=>`<option value="${esc(g)}" ${g===m.genre?'selected':''}>${esc(g)}</option>`).join('');
+  body.innerHTML=`
+    <div class="editor">
+      <div class="editor-meta"><div class="meta-row">
+        <input class="mi mi-date" type="date" id="fDate" value="${esc(m.date)}">
+        <select class="mi mi-genre" id="fGenre">${opts}</select>
+        <input class="mi mi-title" type="text" id="fTitle" value="${esc(m.title)}" placeholder="タイトル…">
+      </div></div>
+      <div class="tbl-wrap">
+        <table class="fact-tbl">
+          <thead><tr>
+            <th class="col-clr">色</th>
+            <th class="col-hyogo">標語<small>キーワード</small></th>
+            <th class="col-fact">ファクト<small>事実・気づき・出来事</small></th>
+            <th class="col-abs">抽象化<small>本質・パターン・法則</small></th>
+            <th class="col-app">転用<small>自分への応用・アクション</small></th>
+          </tr></thead>
+          <tbody id="rowsBody">${m.rows.map(rowHtml).join('')}</tbody>
+        </table>
+        <div class="clr-legend">
+          <span>色の意味：</span>
+          <div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>緑＝主観</div>
+          <div class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>青＝やや重要・引用</div>
+          <div class="legend-item"><span class="legend-dot" style="background:var(--red)"></span>赤＝重要・客観</div>
+        </div>
+      </div>
+      <button class="btn-add-row" id="btnAddRow">＋ 行を追加</button>
+      <div class="action-bar">
+        <button class="btn btn-ghost" id="btnCancel">キャンセル</button>
+        <button class="btn ${m._new?'btn-accent':'btn-primary'}" id="btnSave">${m._new?'💾 保存する':'✓ 更新する'}</button>
+      </div>
+    </div>`;
+  autoResizeAll();
+  document.getElementById('fDate').addEventListener('input', e=>S.memo.date=e.target.value);
+  document.getElementById('fGenre').addEventListener('change',e=>S.memo.genre=e.target.value);
+  document.getElementById('fTitle').addEventListener('input',e=>S.memo.title=e.target.value);
+  document.getElementById('btnAddRow').addEventListener('click', addRow);
+  document.getElementById('btnCancel').addEventListener('click', goList);
+  document.getElementById('btnSave').addEventListener('click', saveMemo);
+  bindRows();
+}
+function rowHtml(r,i) {
+  const c=r.clr||'';
+  return `<tr class="fact-row" data-i="${i}" data-clr="${c}">
+    <td class="td-clr"><div class="clr-btns">
+      <button class="clr-btn green${c==='green'?' sel':''}" data-i="${i}" data-c="green" title="緑：主観"></button>
+      <button class="clr-btn blue${c==='blue'?' sel':''}"  data-i="${i}" data-c="blue"  title="青：やや重要・引用"></button>
+      <button class="clr-btn red${c==='red'?' sel':''}"    data-i="${i}" data-c="red"   title="赤：重要・客観"></button>
+    </div></td>
+    <td class="td-hyogo"><div class="row-num">#${i+1} <button class="btn-del" data-i="${i}">×</button></div>
+      <textarea class="rta" data-i="${i}" data-f="hyogo" placeholder="キーワード">${esc(r.hyogo)}</textarea></td>
+    <td class="td-fact"><textarea class="rta" data-i="${i}" data-f="fact"  placeholder="何を見た・聞いた・体験した？">${esc(r.fact)}</textarea></td>
+    <td class="td-abs"> <textarea class="rta" data-i="${i}" data-f="abs"   placeholder="どんな法則・本質が隠れている？">${esc(r.abs)}</textarea></td>
+    <td class="td-app"> <textarea class="rta" data-i="${i}" data-f="app"   placeholder="自分の人生にどう活かす？">${esc(r.app)}</textarea></td>
+  </tr>`;
+}
+function bindRows() {
+  const tb=document.getElementById('rowsBody');
+  tb.addEventListener('input',e=>{ const ta=e.target; if(ta.tagName!=='TEXTAREA')return; const i=+ta.dataset.i,f=ta.dataset.f; if(S.memo.rows[i])S.memo.rows[i][f]=ta.value; autoResize(ta); });
+  tb.addEventListener('click',e=>{
+    const del=e.target.closest('.btn-del');
+    if(del){const i=+del.dataset.i; if(S.memo.rows.length<=1){toast('最低1行は必要です');return;} S.memo.rows.splice(i,1); reRows(); return;}
+    const cb=e.target.closest('.clr-btn');
+    if(cb){const i=+cb.dataset.i,c=cb.dataset.c; S.memo.rows[i].clr=S.memo.rows[i].clr===c?'':c; reRows();}
+  });
+}
+function reRows() { document.getElementById('rowsBody').innerHTML=S.memo.rows.map(rowHtml).join(''); autoResizeAll(); bindRows(); }
+function addRow() { S.memo.rows.push({hyogo:'',fact:'',abs:'',app:'',clr:''}); reRows(); const tas=document.querySelectorAll('#rowsBody .rta[data-f="hyogo"]'); if(tas.length)tas[tas.length-1].focus(); }
+
+/* ─── MEMO CRUD ────────────────── */
+function newMemo() {
+  S.memo={_new:true,id:uid(),date:now(),genre:db.genres[0]||'その他',title:'',rows:[{hyogo:'',fact:'',abs:'',app:'',clr:''}],createdAt:Date.now(),updatedAt:Date.now()};
+  S.view='edit'; renderSB(); renderHead(); renderEdit();
+}
+function openMemo(id) {
+  const m=db.memos.find(x=>x.id===id); if(!m)return;
+  S.memo=JSON.parse(JSON.stringify(m)); S.memo._new=false;
+  S.view='edit'; renderSB(); renderHead(); renderEdit();
+}
+function saveMemo() {
+  S.memo.updatedAt=Date.now();
+  const {_new,...clean}=S.memo;
+  const idx=db.memos.findIndex(x=>x.id===clean.id);
+  if(idx>=0)db.memos[idx]=clean; else db.memos.push(clean);
+  persist(db); toast('保存しました ✓'); S.memo._new=false; renderHead();
+  const btn=document.getElementById('btnSave');
+  if(btn){btn.textContent='✓ 更新する';btn.className='btn btn-primary';}
+}
+function delMemo(id) {
+  if(!confirm('削除しますか？元に戻せません。'))return;
+  db.memos=db.memos.filter(m=>m.id!==id); persist(db); toast('削除しました'); goList();
+}
+function goList() { S.memo=null; S.view='list'; renderSB(); renderHead(); renderList(); }
+
+/* ─── LINE SHARE ───────────────── */
+function lineShare(id) {
+  const m=db.memos.find(x=>x.id===id); if(!m)return;
+  const CLR={green:'[主観]',blue:'[重要]',red:'[客観]'};
+  let t=`✍️【${m.title||'無題'}】\n📅 ${fmtDate(m.date)}　${m.genre}\n${'─'.repeat(16)}\n\n`;
+  m.rows.forEach((r,i)=>{ if(!r.hyogo&&!r.fact&&!r.abs&&!r.app)return; const tag=r.clr?CLR[r.clr]+' ':''; t+=`【${i+1}】${tag}${r.hyogo||''}\n`; if(r.fact)t+=`📌 ${r.fact}\n`; if(r.abs)t+=`　💡 ${r.abs}\n`; if(r.app)t+=`　🚀 ${r.app}\n`; t+='\n'; });
+  t+='#メモの魔力';
+  window.open(`https://line.me/R/msg/text/?${encodeURIComponent(t)}`, '_blank');
+}
+
+/* ─── ANALYSIS HOME ────────────── */
+function renderAnalysisHome() {
+  const body = document.getElementById('mainBody');
+  const total    = db.questions.length;
+  const answered = Object.keys(db.analyses).length;
+  const pct      = total ? Math.round(answered/total*100) : 0;
+
+  // Group by category
+  const cats = {};
+  db.questions.forEach(q => {
+    if (!cats[q.category]) cats[q.category] = { total: 0, done: 0 };
+    cats[q.category].total++;
+    if (db.analyses[q.id]) cats[q.category].done++;
+  });
+
+  const catHtml = Object.entries(cats).map(([cat, stat]) => {
+    const pct2 = Math.round(stat.done/stat.total*100);
+    const badge = stat.done===stat.total && stat.total>0
+      ? '<span class="cat-badge done">完了</span>'
+      : stat.done > 0
+        ? `<span class="cat-badge in-progress">${stat.done}/${stat.total}</span>`
+        : `<span class="cat-badge todo">0/${stat.total}</span>`;
+    return `<div class="category-row" data-cat="${esc(cat)}">
+      <div class="cat-info"><h4>${esc(cat)}</h4><p>${stat.done}/${stat.total}問回答済み　${pct2}%</p></div>
+      <div class="cat-progress">${badge} <span style="color:var(--muted);font-size:16px">›</span></div>
+    </div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="analysis-wrap">
+
+      <div class="ai-session-card" id="btnStartSession">
+        <h3>🤖 AIと一緒に自己分析する</h3>
+        <p>「強みがわからない」「同じ失敗をくり返す」「将来が見えない」…<br>
+           あなたの目的や悩みを話すだけで、AIが今の自分に必要な質問だけを厳選。<br>
+           0からでも、60→70のためにも使えます。</p>
+        <div class="ai-session-start">セッションを始める →</div>
+      </div>
+
+      <div class="divider-or">または　カテゴリから自分で選ぶ</div>
+
+      <div class="analysis-top-card">
+        <h2>📚 全問チャレンジ</h2>
+        <p>「メモの魔力」790問を時代・テーマ別に自由に回答。AIが抽象化・転用をサポートします。</p>
+        ${total > 0 ? `
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+          <div class="progress-label">${answered} / ${total} 問完了（${pct}%）</div>
+        </div>` : ''}
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:600;color:var(--light)">カテゴリー（${Object.keys(cats).length}）</div>
+        <label style="cursor:pointer;font-size:12px;color:var(--accent)">
+          <input type="file" id="fileInput" accept=".txt,.csv" style="display:none">
+          📁 独自の質問ファイルを読み込む
+        </label>
+      </div>
+      ${total === 0 ? `<label class="import-zone" id="importZone">
+        <input type="file" id="fileInput2" accept=".txt,.csv">
+        <div class="import-zone-icon">📁</div>
+        <h3>質問ファイルをインポート</h3>
+        <p>テキストファイル（.txt）をドラッグ＆ドロップ、またはクリックして選択</p>
+      </label>` : `<div class="category-list">${catHtml}</div>`}
+    </div>`;
+
+  document.getElementById('btnStartSession')?.addEventListener('click', startAISession);
+
+  document.getElementById('fileInput')?.addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => { parseQuestions(ev.target.result); renderSB(); renderHead(); renderAnalysisHome(); };
+    reader.readAsText(file, 'UTF-8');
+  });
+
+  body.querySelectorAll('.category-row').forEach(row => {
+    row.addEventListener('click', () => openCategory(row.dataset.cat));
+  });
+
+  // Drag and drop
+  const zone = document.getElementById('importZone');
+  if (zone) {
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault(); zone.classList.remove('drag');
+      const file = e.dataTransfer.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => { parseQuestions(ev.target.result); renderSB(); renderHead(); renderAnalysisHome(); };
+      reader.readAsText(file, 'UTF-8');
+    });
+  }
+}
+
+function parseQuestions(text) {
+  const lines  = text.split('\n').map(l => l.trim()).filter(Boolean);
+  let category = 'その他';
+  const qs     = [];
+  lines.forEach(line => {
+    if (line.startsWith('#')) { category = line.replace(/^#+\s*/, '').trim(); return; }
+    const q = line.replace(/^[\d]+[.。）)]\s*/, '').trim();
+    if (q.length >= 3) qs.push({ id: uid(), category, text: q });
+  });
+  if (!qs.length) { toast('質問が見つかりませんでした'); return; }
+  db.questions = qs;
+  persist(db);
+  toast(`${qs.length}問をインポートしました ✓`);
+}
+
+/* ─── CATEGORY / QUESTION VIEW ── */
+function categoryQuestions() {
+  if (!S.analysisCategory) return db.questions;
+  return db.questions.filter(q => q.category === S.analysisCategory);
+}
+
+function openCategory(cat) {
+  S.analysisCategory = cat;
+  S.analysisQIdx     = 0;
+  // Find first unanswered
+  const qs = categoryQuestions();
+  const firstUnanswered = qs.findIndex(q => !db.analyses[q.id]);
+  if (firstUnanswered >= 0) S.analysisQIdx = firstUnanswered;
+  S.chatHistory = [];
+  S.view = 'analysis-q';
+  renderSB(); renderHead(); renderQuestion();
+}
+
+function renderQuestion() {
+  const qs  = categoryQuestions();
+  if (!qs.length) { renderAnalysisHome(); return; }
+  const q   = qs[S.analysisQIdx];
+  const ans = db.analyses[q.id] || { fact: '', abs: '', app: '', chatHistory: [] };
+  S.chatHistory = ans.chatHistory || [];
+  const body = document.getElementById('mainBody');
+
+  const chatMsgs = S.chatHistory.map(m =>
+    `<div class="chat-bubble ${m.role==='user'?'user':'ai'}">${esc(m.content)}</div>`
+  ).join('');
+
+  body.innerHTML = `
+    <div class="q-view">
+      <div class="q-nav">
+        <button class="btn-back" id="btnPrev" ${S.analysisQIdx===0?'disabled style="opacity:.4"':''}>‹ 前の問</button>
+        <span class="q-nav-center">${S.analysisQIdx+1} / ${qs.length}</span>
+        <button class="btn-back" id="btnNext" ${S.analysisQIdx===qs.length-1?'disabled style="opacity:.4"':''}>次の問 ›</button>
+      </div>
+
+      <div class="q-card">
+        <div class="q-number">Q.${db.questions.indexOf(q)+1}</div>
+        <div class="q-text">${esc(q.text)}</div>
+        <div class="q-category">📂 ${esc(q.category)}</div>
+      </div>
+
+      <div class="input-card">
+        <label>📌 ファクト（あなたの答え）</label>
+        <textarea class="fact-input" id="factInput" placeholder="思ったこと、体験、感情をそのまま書いてください…">${esc(ans.fact)}</textarea>
+        <div class="ai-assist-bar">
+          <button class="btn btn-ai" id="btnAiAssist">✨ AI補助（抽象化・転用を提案）</button>
+          <span style="font-size:11px;color:var(--muted)">ファクトを入力後にクリック</span>
+        </div>
+        <div id="aiThinking"></div>
+        <div class="ai-result-grid" id="aiResultGrid" style="${ans.abs||ans.app?'':'display:none'}">
+          <div class="ai-result-box abs-box">
+            <div class="ai-result-label">💡 抽象化</div>
+            <textarea class="ai-result-ta" id="absInput" placeholder="AIが提案、または自分で入力…">${esc(ans.abs)}</textarea>
+          </div>
+          <div class="ai-result-box app-box">
+            <div class="ai-result-label">🚀 転用</div>
+            <textarea class="ai-result-ta" id="appInput" placeholder="AIが提案、または自分で入力…">${esc(ans.app)}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-card">
+        <div class="chat-header">
+          <div>
+            <h3>💬 深掘りチャット</h3>
+            <p>AIが質問を重ねて、さらに深い自己理解へ</p>
+          </div>
+        </div>
+        <div class="chat-messages" id="chatMessages">${chatMsgs||'<div style="font-size:12px;color:var(--muted);text-align:center;padding:10px">「深掘り開始」でAIが最初の問いかけをします</div>'}</div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="chatInput" type="text" placeholder="返答を入力…">
+          <button class="chat-send" id="btnDeepDive">深掘り開始</button>
+        </div>
+      </div>
+
+      <div class="q-action-bar">
+        <button class="btn btn-ghost" id="btnSkip">スキップ →</button>
+        <button class="btn btn-line"  id="btnShareQ" style="display:${ans.fact?'':'none'}">LINE共有</button>
+        <button class="btn btn-accent" id="btnSaveQ">📓 メモに保存して次へ</button>
+      </div>
+    </div>`;
+
+  autoResizeAll();
+  document.getElementById('factInput').addEventListener('input', e => { autoResize(e.target); });
+  document.getElementById('absInput')?.addEventListener('input', e => autoResize(e.target));
+  document.getElementById('appInput')?.addEventListener('input', e => autoResize(e.target));
+
+  document.getElementById('btnPrev').addEventListener('click', () => { if(S.analysisQIdx>0){S.analysisQIdx--;S.chatHistory=[];renderHead();renderQuestion();} });
+  document.getElementById('btnNext').addEventListener('click', () => { if(S.analysisQIdx<qs.length-1){S.analysisQIdx++;S.chatHistory=[];renderHead();renderQuestion();} });
+  document.getElementById('btnSkip').addEventListener('click', () => { S.analysisQIdx=Math.min(S.analysisQIdx+1,qs.length-1); S.chatHistory=[]; renderHead(); renderQuestion(); });
+  document.getElementById('btnSaveQ').addEventListener('click', () => saveAnalysis(q));
+  document.getElementById('btnShareQ')?.addEventListener('click', () => shareAnalysisLine(q));
+  document.getElementById('btnAiAssist').addEventListener('click', () => doAiAssist(q));
+  document.getElementById('btnDeepDive').addEventListener('click', () => doDeepDive(q));
+  document.getElementById('chatInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); doDeepDive(q); }
+  });
+}
+
+async function doAiAssist(q) {
+  const fact = document.getElementById('factInput').value.trim();
+  if (!fact) { toast('まずファクトを入力してください'); return; }
+
+  const thinking = document.getElementById('aiThinking');
+  const grid     = document.getElementById('aiResultGrid');
+  thinking.innerHTML = `<div class="ai-thinking"><div class="ai-dots"><span></span><span></span><span></span></div> AIが考えています…</div>`;
+  grid.style.display = 'none';
+  document.getElementById('btnAiAssist').disabled = true;
+
+  const messages = [
+    { role: 'system', content: PROMPT_ASSIST },
+    { role: 'user',   content: `質問：${q.text}\nファクト：${fact}` },
+  ];
+
+  const result = await callAI(messages, null);
+  thinking.innerHTML = '';
+  document.getElementById('btnAiAssist').disabled = false;
+
+  if (!result) return;
+
+  // Parse 【抽象化】【転用】
+  const absMatch = result.match(/【抽象化】\s*([\s\S]+?)(?=【転用】|$)/);
+  const appMatch = result.match(/【転用】\s*([\s\S]+?)$/);
+  const abs = absMatch ? absMatch[1].trim() : result.split('\n').slice(0,3).join('\n');
+  const app = appMatch ? appMatch[1].trim() : '';
+
+  grid.style.display = '';
+  const absTA = document.getElementById('absInput');
+  const appTA = document.getElementById('appInput');
+  absTA.value = abs; autoResize(absTA);
+  appTA.value = app; autoResize(appTA);
+}
+
+async function doDeepDive(q) {
+  const userInput  = document.getElementById('chatInput').value.trim();
+  const fact       = document.getElementById('factInput').value.trim();
+  const chatEl     = document.getElementById('chatMessages');
+  const sendBtn    = document.getElementById('btnDeepDive');
+
+  if (userInput) {
+    S.chatHistory.push({ role: 'user', content: userInput });
+    document.getElementById('chatInput').value = '';
+    appendBubble(chatEl, 'user', userInput);
+  }
+
+  sendBtn.disabled = true; sendBtn.textContent = '考え中…';
+
+  const messages = [
+    { role: 'system', content: PROMPT_CHAT },
+    { role: 'user',   content: `質問：${q.text}\nファクト：${fact}` },
+    ...S.chatHistory,
+  ];
+
+  // Show typing bubble
+  const typingId = 'typing-' + Date.now();
+  chatEl.insertAdjacentHTML('beforeend', `<div class="chat-bubble ai" id="${typingId}"><div class="ai-dots"><span></span><span></span><span></span></div></div>`);
+  chatEl.scrollTop = chatEl.scrollHeight;
+
+  const result = await callAI(messages, text => {
+    const el = document.getElementById(typingId);
+    if (el) el.textContent = text;
+    chatEl.scrollTop = chatEl.scrollHeight;
+  });
+
+  sendBtn.disabled = false; sendBtn.textContent = '送信';
+  const typingEl = document.getElementById(typingId);
+  if (typingEl) typingEl.remove();
+
+  if (result) {
+    S.chatHistory.push({ role: 'assistant', content: result });
+    appendBubble(chatEl, 'ai', result);
+  }
+}
+
+function appendBubble(container, role, text) {
+  container.insertAdjacentHTML('beforeend', `<div class="chat-bubble ${role}">${esc(text)}</div>`);
+  container.scrollTop = container.scrollHeight;
+}
+
+function saveAnalysis(q) {
+  const fact = document.getElementById('factInput').value.trim();
+  const abs  = document.getElementById('absInput')?.value.trim() || '';
+  const app  = document.getElementById('appInput')?.value.trim() || '';
+
+  db.analyses[q.id] = { fact, abs, app, chatHistory: S.chatHistory, savedAt: Date.now() };
+
+  // Also save as a memo
+  const memo = {
+    id: uid(), date: now(), genre: '自己分析', title: q.text,
+    rows: [{ hyogo: q.category, fact, abs, app, clr: 'blue' }],
+    createdAt: Date.now(), updatedAt: Date.now(),
+    fromAnalysis: q.id,
+  };
+  if (!db.genres.includes('自己分析')) db.genres.push('自己分析');
+  db.memos.push(memo);
+  persist(db);
+  toast('メモに保存しました ✓');
+
+  const qs = categoryQuestions();
+  if (S.analysisQIdx < qs.length - 1) {
+    S.analysisQIdx++; S.chatHistory = [];
+    renderSB(); renderHead(); renderQuestion();
+  } else {
+    toast('このカテゴリーは全問完了です 🎉');
+    setTimeout(() => { S.view='analysis-home'; renderSB(); renderHead(); renderAnalysisHome(); }, 1200);
+  }
+}
+
+function shareAnalysisLine(q) {
+  const fact = document.getElementById('factInput').value.trim();
+  const abs  = document.getElementById('absInput')?.value.trim()||'';
+  const app  = document.getElementById('appInput')?.value.trim()||'';
+  let t = `✍️ 自己分析メモ\n\n❓ ${q.text}\n\n📌 ${fact}\n`;
+  if (abs) t += `💡 ${abs}\n`;
+  if (app) t += `🚀 ${app}\n`;
+  t += '\n#メモの魔力 #自己分析';
+  window.open(`https://line.me/R/msg/text/?${encodeURIComponent(t)}`, '_blank');
+}
+
+/* ─── SETTINGS ─────────────────── */
+function renderSettings() {
+  const s = db.settings;
+  const body = document.getElementById('mainBody');
+  body.innerHTML = `
+    <div class="settings-wrap">
+      <div class="settings-card">
+        <h2>⚙️ AI設定</h2>
+        <p>自己分析のAI補助機能には、APIキーが必要です。<strong>Groq</strong>は無料アカウントで使えます。</p>
+        <div class="setting-item">
+          <label>AIプロバイダー</label>
+          <select class="mi" id="sProvider" style="width:100%">
+            <option value="groq"   ${s.apiProvider==='groq'  ?'selected':''}>Groq（無料・高速・推奨）</option>
+            <option value="ollama" ${s.apiProvider==='ollama'?'selected':''}>Ollama（完全無料・ローカル動作）</option>
+          </select>
+        </div>
+        <div id="groqSection" ${s.apiProvider==='ollama'?'style="display:none"':''}>
+          <div class="setting-item">
+            <label>Groq APIキー</label>
+            <div class="setting-row">
+              <input class="mi" type="password" id="sApiKey" value="${esc(s.apiKey)}" placeholder="gsk_…" style="flex:1">
+              <button class="btn btn-primary" id="btnSaveKey">保存</button>
+              <button class="btn btn-ghost" id="btnTestKey">テスト</button>
+            </div>
+            <div class="setting-hint">
+              ① <a href="https://console.groq.com" target="_blank">console.groq.com</a> で無料アカウント作成<br>
+              ② 「API Keys」→「Create API Key」でキーを発行<br>
+              ③ 上のフォームに貼り付けて保存<br>
+              ✅ 無料枠：1日あたり14,400リクエスト（個人利用に十分）
+            </div>
+          </div>
+        </div>
+        <div id="ollamaSection" ${s.apiProvider!=='ollama'?'style="display:none"':''}>
+          <div class="setting-item">
+            <label>Ollamaモデル名</label>
+            <input class="mi" type="text" id="sOllamaModel" value="${esc(s.ollamaModel||'llama3.2')}" style="width:100%">
+            <div class="setting-hint">
+              ① <a href="https://ollama.ai" target="_blank">ollama.ai</a> からインストール<br>
+              ② ターミナルで: <code>ollama pull llama3.2</code>（または好きなモデル）<br>
+              ③ 自動起動します（localhost:11434）
+            </div>
+          </div>
+          <button class="btn btn-ghost" id="btnTestOllama">Ollama接続テスト</button>
+        </div>
+        <div id="apiStatus"></div>
+      </div>
+
+      <div class="settings-card">
+        <h2>📁 質問ファイルの形式</h2>
+        <p>テキストファイル（.txt）で1行1問、またはカテゴリー分けして使えます。</p>
+        <div class="format-example"># 幼少期・家族<br>子供の頃、一番好きだった遊びは？<br>小学校の一番の思い出を教えてください<br><br># 仕事・将来<br>10年後どんな自分になっていたいですか？</div>
+      </div>
+
+      <div class="settings-card">
+        <h2>🗑️ データ管理</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost" id="btnExport">データをエクスポート</button>
+          <button class="btn btn-danger" id="btnClearQ">質問データをリセット</button>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('sProvider').addEventListener('change', e => {
+    const v = e.target.value; db.settings.apiProvider = v; persist(db);
+    document.getElementById('groqSection').style.display  = v==='groq'   ? '' : 'none';
+    document.getElementById('ollamaSection').style.display= v==='ollama' ? '' : 'none';
+  });
+
+  document.getElementById('btnSaveKey')?.addEventListener('click', () => {
+    db.settings.apiKey = document.getElementById('sApiKey').value.trim();
+    persist(db); toast('APIキーを保存しました ✓');
+  });
+
+  document.getElementById('btnTestKey')?.addEventListener('click', async () => {
+    const st = document.getElementById('apiStatus');
+    st.innerHTML = '<div class="api-status" style="background:#ebf4ff;color:#3182ce">🔄 テスト中…</div>';
+    const result = await callAI([{role:'user',content:'「テスト成功」とだけ返してください'}], null);
+    if (result) st.innerHTML = `<div class="api-status ok">✅ 接続成功：${esc(result.slice(0,40))}</div>`;
+    else        st.innerHTML = `<div class="api-status err">❌ 接続失敗。APIキーを確認してください</div>`;
+  });
+
+  document.getElementById('btnTestOllama')?.addEventListener('click', async () => {
+    db.settings.ollamaModel = document.getElementById('sOllamaModel').value.trim();
+    persist(db);
+    const st = document.getElementById('apiStatus');
+    st.innerHTML = '<div class="api-status" style="background:#ebf4ff;color:#3182ce">🔄 テスト中…</div>';
+    const result = await callAI([{role:'user',content:'「テスト成功」とだけ返してください'}], null);
+    if (result) st.innerHTML = `<div class="api-status ok">✅ Ollama接続成功</div>`;
+    else        st.innerHTML = `<div class="api-status err">❌ 失敗。Ollamaが起動しているか確認してください</div>`;
+  });
+
+  document.getElementById('btnExport')?.addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(db, null, 2)], {type:'application/json'});
+    const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='memo-mahou-export.json'; a.click();
+  });
+
+  document.getElementById('btnClearQ')?.addEventListener('click', () => {
+    if (!confirm('質問データと分析データをすべてリセットしますか？')) return;
+    db.questions=[]; db.analyses={}; persist(db); toast('リセットしました'); renderSettings();
+  });
+}
+
+/* ─── NAVIGATION EVENTS ──────── */
+document.getElementById('sbNav').addEventListener('click', e => {
+  const item = e.target.closest('.nav-item'); if (!item) return;
+  const key  = item.dataset.nav;
+  if (key === '__genre__')  { openGenreModal(); return; }
+  if (key === 'analysis')   { S.view='analysis-home'; S.filter='all'; renderSB(); renderHead(); renderAnalysisHome(); return; }
+  if (key === 'settings')   { S.view='settings';      S.filter='all'; renderSB(); renderHead(); renderSettings(); return; }
+  S.filter=key; S.search=''; document.getElementById('searchInput').value='';
+  S.view='list'; renderSB(); renderHead(); renderList();
+});
+
+document.getElementById('btnNew').addEventListener('click', newMemo);
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  S.search=e.target.value.trim(); S.filter=S.search?'search':'all'; S.view='list';
+  renderSB(); renderHead(); renderList();
+});
+
+/* ─── GENRE MODAL ──────────────── */
+function openGenreModal() { document.getElementById('genreModal').classList.add('open'); document.getElementById('genreInput').value=''; document.getElementById('genreInput').focus(); }
+function closeGenreModal() { document.getElementById('genreModal').classList.remove('open'); }
+function addGenre() {
+  const name=document.getElementById('genreInput').value.trim(); if(!name)return;
+  if(db.genres.includes(name)){toast('同名のジャンルが既にあります');return;}
+  db.genres.push(name); persist(db); closeGenreModal(); renderSB(); toast(`「${name}」を追加しました`);
+}
+document.getElementById('btnAddGenre').addEventListener('click', addGenre);
+document.getElementById('btnCloseGenre').addEventListener('click', closeGenreModal);
+document.getElementById('genreInput').addEventListener('keydown', e=>{ if(e.key==='Enter')addGenre(); if(e.key==='Escape')closeGenreModal(); });
+document.getElementById('genreModal').addEventListener('click', e=>{ if(e.target===e.currentTarget)closeGenreModal(); });
+
+/* ─── KEYBOARD ─────────────────── */
+document.addEventListener('keydown', e => {
+  if ((e.metaKey||e.ctrlKey) && e.key==='s') { e.preventDefault(); if(S.view==='edit')saveMemo(); }
+});
+
+/* ─── AI SESSION ─────────────────── */
+let AS = { phase:'intake', intakeChat:[], questions:[], qIdx:0, answers:[], insight:'' };
+
+const PROMPT_INTAKE_COACH = `あなたは「メモの魔力」式の自己分析セッションを導くコーチです。
+ユーザーの目的・悩みを理解するために、温かく共感しながら深掘り質問を1つだけしてください。
+十分に把握できたと感じたら、最後に必ず [READY] と追記してください。
+質問は短く、1〜2文にしてください。`;
+
+const PROMPT_GEN_SESSION_QS = (context) => `あなたは「メモの魔力」式の自己分析の専門家です。
+以下の会話からユーザーの目的・現状を把握し、今の自分を知るために最も効果的な質問を5〜7個生成してください。
+
+条件：
+・具体的な過去の経験・感情を引き出せる形の質問
+・ファクト（事実）として語れる質問
+・ユーザーの目的に直結する質問
+
+会話：
+${context}
+
+JSONの配列のみ出力（説明不要）：["質問1", "質問2", ...]`;
+
+const PROMPT_SESSION_INSIGHT = `あなたは「メモの魔力」式の自己分析コーチです。
+ユーザーが複数の質問に回答しました。すべての回答・抽象化・転用を総合して、以下を提供してください：
+
+【あなたについて見えてきたこと】
+回答から浮かび上がるパターン・強み・価値観を3〜4点、箇条書きで。具体的に。
+
+【これからより充実して生きるために】
+現状から次のステップへ。具体的で実践しやすい提案を2〜3点、箇条書きで。
+
+温かく、前向きなトーンで書いてください。`;
+
+async function startAISession() {
+  AS = { phase:'intake', intakeChat:[], questions:[], qIdx:0, answers:[], insight:'' };
+  S.view = 'ai-session';
+  renderSB(); renderHead();
+  // Show loading, then AI sends opener
+  document.getElementById('mainBody').innerHTML = `<div class="ai-generating"><div class="ai-dots"><span></span><span></span><span></span></div><p>AIコーチが準備中…</p></div>`;
+  const opener = await callAI([
+    {role:'system', content: PROMPT_INTAKE_COACH},
+    {role:'user', content: '自己分析セッションを始めたいです。'},
+  ], null);
+  if (opener) {
+    const clean = opener.replace('[READY]','').trim();
+    AS.intakeChat.push({role:'assistant', content: clean});
+  }
+  renderAIIntake();
+}
+
+function renderAIIntake() {
+  const body = document.getElementById('mainBody');
+  const msgs = AS.intakeChat.length
+    ? AS.intakeChat.map(m=>`<div class="chat-bubble ${m.role==='user'?'user':'ai'}">${esc(m.content)}</div>`).join('')
+    : '<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px">読み込み中…</div>';
+
+  body.innerHTML = `
+    <div class="session-wrap">
+      <div class="phase-label"><span class="phase-dot"></span>STEP 1 / 3 — 目的を教えてください</div>
+      <div class="intake-card">
+        <div class="intake-head">
+          <h2>🤖 AI自己分析セッション</h2>
+          <p>あなたの目的に合わせて、AIが最適な質問を厳選します</p>
+        </div>
+        <div class="intake-msgs" id="intakeMsgs">${msgs}</div>
+        <div class="intake-input-row">
+          <textarea class="intake-ta" id="intakeTa" placeholder="自由に話しかけてください…" rows="2"></textarea>
+          <button class="chat-send" id="btnIntakeSend" style="height:44px">送信</button>
+        </div>
+      </div>
+      ${AS.intakeChat.length >= 2 ? `
+      <div style="text-align:center;margin-top:6px">
+        <button class="btn btn-ai" id="btnGenQ" style="font-size:14px;padding:12px 32px">✨ この内容でセッションを始める</button>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">AIが5〜7問を厳選します</div>
+      </div>` : ''}
+    </div>`;
+
+  const el = document.getElementById('intakeMsgs');
+  if (el) el.scrollTop = 99999;
+
+  const ta = document.getElementById('intakeTa');
+  if (ta) {
+    ta.addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendIntakeMsg(); } });
+    ta.addEventListener('input', () => { ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; });
+  }
+  document.getElementById('btnIntakeSend')?.addEventListener('click', sendIntakeMsg);
+  document.getElementById('btnGenQ')?.addEventListener('click', generateSessionQuestions);
+}
+
+async function sendIntakeMsg() {
+  const ta = document.getElementById('intakeTa');
+  const text = ta?.value.trim(); if (!text) return;
+  ta.value = ''; ta.style.height = 'auto';
+  AS.intakeChat.push({role:'user', content: text});
+  renderAIIntake();
+
+  const result = await callAI([{role:'system', content: PROMPT_INTAKE_COACH}, ...AS.intakeChat], null);
+  if (!result) return;
+  const isReady = result.includes('[READY]');
+  AS.intakeChat.push({role:'assistant', content: result.replace('[READY]','').trim()});
+  renderAIIntake();
+  if (isReady) setTimeout(generateSessionQuestions, 600);
+}
+
+async function generateSessionQuestions() {
+  document.getElementById('mainBody').innerHTML = `<div class="ai-generating"><div class="ai-dots"><span></span><span></span><span></span></div><p>あなたに合った質問を厳選しています…</p></div>`;
+  const ctx = AS.intakeChat.map(m=>`${m.role==='user'?'ユーザー':'コーチ'}: ${m.content}`).join('\n');
+  const result = await callAI([{role:'user', content: PROMPT_GEN_SESSION_QS(ctx)}], null);
+  if (!result) { toast('質問の生成に失敗しました'); renderAIIntake(); return; }
+  try {
+    const match = result.match(/\[[\s\S]*\]/);
+    if (!match) throw new Error();
+    AS.questions = JSON.parse(match[0]).filter(q => typeof q === 'string' && q.trim());
+    if (!AS.questions.length) throw new Error();
+    AS.answers   = AS.questions.map(() => ({fact:'', abs:'', app:'', chat:[]}));
+    AS.qIdx      = 0;
+    AS.phase     = 'questions';
+    renderSB(); renderHead();
+    renderSessionQ();
+  } catch(_) {
+    toast('質問の解析に失敗しました。もう一度お試しください。'); renderAIIntake();
+  }
+}
+
+function renderSessionQ() {
+  const q   = AS.questions[AS.qIdx];
+  const ans = AS.answers[AS.qIdx];
+  const body = document.getElementById('mainBody');
+  const chatMsgs = (ans.chat||[]).map(m=>`<div class="chat-bubble ${m.role==='user'?'user':'ai'}">${esc(m.content)}</div>`).join('');
+  const isLast = AS.qIdx === AS.questions.length - 1;
+
+  body.innerHTML = `
+    <div class="session-wrap">
+      <div class="phase-label"><span class="phase-dot"></span>STEP 2 / 3 — 質問に答えましょう</div>
+      <div class="session-progress">
+        ${AS.questions.map((_,i)=>`<div class="sp-dot ${i<AS.qIdx?'done':i===AS.qIdx?'current':''}"></div>`).join('')}
+      </div>
+      <div class="session-q-card">
+        <div class="session-q-num">Q${AS.qIdx+1} / ${AS.questions.length}</div>
+        <div class="session-q-text">${esc(q)}</div>
+      </div>
+      <div class="input-card">
+        <label>📌 ファクト（あなたの答え）</label>
+        <textarea class="fact-input" id="factInput" placeholder="具体的な経験・感情・事実を書いてください…">${esc(ans.fact)}</textarea>
+        <div class="ai-assist-bar">
+          <button class="btn btn-ai" id="btnAssist">✨ 抽象化・転用を提案</button>
+        </div>
+        <div id="aiThinking"></div>
+        <div class="ai-result-grid" id="aiResultGrid" style="${ans.abs||ans.app?'':'display:none'}">
+          <div class="ai-result-box abs-box"><div class="ai-result-label">💡 抽象化</div>
+            <textarea class="ai-result-ta" id="absInput">${esc(ans.abs)}</textarea></div>
+          <div class="ai-result-box app-box"><div class="ai-result-label">🚀 転用</div>
+            <textarea class="ai-result-ta" id="appInput">${esc(ans.app)}</textarea></div>
+        </div>
+      </div>
+      <div class="chat-card">
+        <div class="chat-header"><div><h3>💬 深掘り</h3><p>AIがさらに聞きます</p></div></div>
+        <div class="chat-messages" id="chatMessages">${chatMsgs||'<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px">「深掘り」でAIが問いかけます</div>'}</div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="chatInput" type="text" placeholder="返答を入力…">
+          <button class="chat-send" id="btnDeep">深掘り</button>
+        </div>
+      </div>
+      <div class="q-action-bar">
+        ${AS.qIdx > 0 ? '<button class="btn btn-ghost" id="btnSPrev">‹ 前へ</button>' : ''}
+        ${isLast
+          ? `<button class="btn btn-ai" id="btnInsight">🌟 インサイトを見る</button>`
+          : `<button class="btn btn-primary" id="btnSNext">次の質問 →</button>`}
+      </div>
+    </div>`;
+
+  autoResizeAll();
+  document.getElementById('factInput').addEventListener('input', e => { AS.answers[AS.qIdx].fact=e.target.value; autoResize(e.target); });
+  document.getElementById('absInput')?.addEventListener('input',  e => { AS.answers[AS.qIdx].abs=e.target.value; autoResize(e.target); });
+  document.getElementById('appInput')?.addEventListener('input',  e => { AS.answers[AS.qIdx].app=e.target.value; autoResize(e.target); });
+  document.getElementById('btnAssist').addEventListener('click',  () => doSessionAssist(q));
+
+  const saveQ = () => {
+    AS.answers[AS.qIdx].fact = document.getElementById('factInput').value.trim();
+    AS.answers[AS.qIdx].abs  = document.getElementById('absInput')?.value.trim()||'';
+    AS.answers[AS.qIdx].app  = document.getElementById('appInput')?.value.trim()||'';
+  };
+  document.getElementById('btnSNext')?.addEventListener('click',    () => { saveQ(); AS.qIdx++; renderSessionQ(); });
+  document.getElementById('btnSPrev')?.addEventListener('click',    () => { saveQ(); AS.qIdx--; renderSessionQ(); });
+  document.getElementById('btnInsight')?.addEventListener('click',  () => { saveQ(); genSessionInsight(); });
+
+  const ci = document.getElementById('chatInput');
+  ci.addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); doSessionDeep(q); } });
+  document.getElementById('btnDeep').addEventListener('click', () => doSessionDeep(q));
+}
+
+async function doSessionAssist(q) {
+  const fact = document.getElementById('factInput').value.trim();
+  if (!fact) { toast('まずファクトを入力してください'); return; }
+  const th = document.getElementById('aiThinking'), grid = document.getElementById('aiResultGrid');
+  th.innerHTML = `<div class="ai-thinking"><div class="ai-dots"><span></span><span></span><span></span></div> 考えています…</div>`;
+  grid.style.display = 'none';
+  document.getElementById('btnAssist').disabled = true;
+  const r = await callAI([{role:'system',content:PROMPT_ASSIST},{role:'user',content:`質問：${q}\nファクト：${fact}`}], null);
+  th.innerHTML = ''; document.getElementById('btnAssist').disabled = false;
+  if (!r) return;
+  const am = r.match(/【抽象化】\s*([\s\S]+?)(?=【転用】|$)/), pm = r.match(/【転用】\s*([\s\S]+?)$/);
+  const abs = am ? am[1].trim() : r.split('\n').slice(0,3).join('\n');
+  const app = pm ? pm[1].trim() : '';
+  grid.style.display = '';
+  const aT = document.getElementById('absInput'), pT = document.getElementById('appInput');
+  aT.value = abs; AS.answers[AS.qIdx].abs = abs; autoResize(aT);
+  pT.value = app; AS.answers[AS.qIdx].app = app; autoResize(pT);
+}
+
+async function doSessionDeep(q) {
+  const userInput = document.getElementById('chatInput').value.trim();
+  const fact = document.getElementById('factInput').value.trim();
+  const chatEl = document.getElementById('chatMessages');
+  const btn = document.getElementById('btnDeep');
+  if (userInput) {
+    AS.answers[AS.qIdx].chat.push({role:'user',content:userInput});
+    document.getElementById('chatInput').value = '';
+    appendBubble(chatEl,'user',userInput);
+  }
+  btn.disabled=true; btn.textContent='…';
+  const tid = 'tp'+Date.now();
+  chatEl.insertAdjacentHTML('beforeend',`<div class="chat-bubble ai" id="${tid}"><div class="ai-dots"><span></span><span></span><span></span></div></div>`);
+  chatEl.scrollTop=99999;
+  const r = await callAI([{role:'system',content:PROMPT_CHAT},{role:'user',content:`質問：${q}\nファクト：${fact}`},...AS.answers[AS.qIdx].chat], text=>{ const el=document.getElementById(tid); if(el)el.textContent=text; chatEl.scrollTop=99999; });
+  btn.disabled=false; btn.textContent='深掘り';
+  document.getElementById(tid)?.remove();
+  if (r) { AS.answers[AS.qIdx].chat.push({role:'assistant',content:r}); appendBubble(chatEl,'ai',r); }
+}
+
+async function genSessionInsight() {
+  AS.phase = 'insight';
+  renderSB(); renderHead();
+  document.getElementById('mainBody').innerHTML = `<div class="ai-generating"><div class="ai-dots"><span></span><span></span><span></span></div><p>あなたのインサイトを生成中…</p></div>`;
+  const summary = AS.questions.map((q,i)=>{
+    const a=AS.answers[i];
+    return `Q${i+1}: ${q}\nファクト: ${a.fact||'(未回答)'}\n抽象化: ${a.abs||''}\n転用: ${a.app||''}`;
+  }).join('\n\n');
+  const r = await callAI([{role:'user',content:PROMPT_SESSION_INSIGHT+'\n\n回答内容:\n'+summary}], null);
+  if (!r) { toast('生成に失敗しました'); return; }
+  AS.insight = r;
+  renderSessionInsight();
+}
+
+function renderSessionInsight() {
+  const body = document.getElementById('mainBody');
+  body.innerHTML = `
+    <div class="session-wrap">
+      <div class="phase-label"><span class="phase-dot"></span>STEP 3 / 3 — インサイト</div>
+      <div class="insight-card">
+        <div class="insight-head"><h2>🌟 あなたについて見えてきたこと</h2></div>
+        <div class="insight-body">${esc(AS.insight)}</div>
+        <div class="insight-actions">
+          <button class="btn btn-ghost" id="btnSessionAgain">もう一度</button>
+          <button class="btn btn-line" id="btnShareIns">LINE共有</button>
+          <button class="btn btn-accent" id="btnSaveIns">📓 メモに保存</button>
+        </div>
+      </div>
+      <div class="analysis-top-card" style="margin-top:0">
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--light)">📝 セッション全記録</div>
+        ${AS.questions.map((q,i)=>{const a=AS.answers[i];return `
+          <div style="margin-bottom:12px;padding-bottom:12px;${i<AS.questions.length-1?'border-bottom:1px solid var(--border)':''}">
+            <div style="font-size:12px;font-weight:600;color:#764ba2;margin-bottom:4px">Q${i+1}. ${esc(q)}</div>
+            ${a.fact?`<div style="font-size:12px;margin-bottom:2px">📌 ${esc(a.fact)}</div>`:''}
+            ${a.abs ?`<div style="font-size:12px;color:var(--light)">💡 ${esc(a.abs)}</div>`:''}
+          </div>`}).join('')}
+      </div>
+    </div>`;
+
+  document.getElementById('btnSessionAgain').addEventListener('click',()=>{ S.view='analysis-home'; renderSB(); renderHead(); renderAnalysisHome(); });
+  document.getElementById('btnShareIns').addEventListener('click',()=>{
+    const t=`✍️ AI自己分析セッション結果\n\n${AS.insight}\n\n#メモの魔力 #自己分析`;
+    window.open(`https://line.me/R/msg/text/?${encodeURIComponent(t)}`, '_blank');
+  });
+  document.getElementById('btnSaveIns').addEventListener('click',()=>{
+    if(!db.genres.includes('自己分析')) db.genres.push('自己分析');
+    const goalText = AS.intakeChat.find(m=>m.role==='user')?.content||'AIセッション';
+    const memo = { id:uid(), date:now(), genre:'自己分析', title:goalText.slice(0,40), rows:AS.questions.map((q,i)=>({hyogo:`Q${i+1}`,fact:AS.answers[i].fact,abs:AS.answers[i].abs,app:AS.answers[i].app,clr:'blue'})), createdAt:Date.now(), updatedAt:Date.now() };
+    db.memos.push(memo); persist(db); toast('メモに保存しました ✓');
+  });
+}
+
+/* ─── BUILT-IN QUESTIONS ─────────── */
+function generateBuiltInQuestions() {
+  const qs = []; let n = 0;
+  const q  = (cat, text) => qs.push({ id: 'bq'+(++n), category: cat, text });
+  const fp = (periods, cat, list) => periods.forEach(p => list.forEach(t => q(cat+'/'+p, `【${p}】${t}`)));
+
+  // ─ Level 1: 夢 ─
+  const L1 = 'レベル①：夢について';
+  ['なぜ自己分析をするのか、その目的は？','現在の自分の「人生の軸」は？','自分の夢と向き合うことで、何を得たいのか？'].forEach(t=>q(L1+'/はじめに',t));
+  fp(['幼少期','小学校','中学校','高校','大学','社会人20代','現在'], L1,
+    ['将来の夢は？','理想の職業は？','理想の人は？','理想の食生活は？','理想の住まいは？','理想の年収は？','理想のパートナーは？','あなたの信念は何か？']);
+  ['30代','40代','50代'].forEach(a => fp([a], L1+'/未来',
+    ['どんな仕事をしたいか？','どんな地位に就いていたいか？','世の中にどんな影響を与えている？','年収は？','何に優先的にお金を使いたいか？','どこに住みたいか？','ライフスタイルは？','新たにチャレンジしたいことは？','周りからどのような役割を期待されているか？']));
+  ['何歳まで働いていたいか？','そのとき、どんな地位にいたいか？','世の中にどんな影響を与えているのか？','資産はどのくらいあるのか？','何に優先的にお金を使いたいか？','どこに住んでいるのか？','ライフスタイルは？','新たにチャレンジしたいことは？','周りからはどのような役割を期待されているか？','死ぬまでに実現したいことは？（家族・親戚）','死ぬまでに実現したいことは？（友人・知人）','死ぬまでに実現したいことは？（勉強・仕事）','死ぬまでに実現したいことは？（趣味）','死の瞬間をどう迎えたいか？'].forEach(t=>q(L1+'/晩年',t));
+
+  // ─ Level 2: 性格① ─
+  const L2 = 'レベル②：性格について①';
+  ['前回の100問に答えたことで、得たものは何か？','自分の性格と向き合うことで、何を得たいのか？','改めて、自分の性格を一言で表すと？','座右の銘は？','自分の好きなところは？','自分の嫌いなところは？','自分の尊敬できるところは？','自分の自慢できるところは？'].forEach(t=>q(L2+'/はじめに',t));
+  fp(['幼少期','小学校','中学校'], L2,
+    ['改めて、自分の性格を一言で表すと？','座右の銘は？','自分の好きだったところは？','自分の嫌いだったところは？','自分の尊敬できたところは？','自分の自慢できたところは？','コンプレックスだったことは？','一番大事にしていたものは？','一番誇りにしていたものは？','空気を読むタイプだったか？読まないタイプだったか？','他人のアドバイスを聞くタイプだったか？','物事に対する捉え方はポジティブだったか？ネガティブだったか？','決断時、どのような判断基準を持っていたか？','運は強いほうだったか？']);
+  fp(['高校','大学','社会人20代','現在'], L2,
+    ['性格は外交的か？内向的か？','コミュニケーションは得意か？苦手か？','初対面の人でも、気軽に打ち解けられるか？','一人でいるのが好きか？複数人といるのが好きか？','人の良い点を見つけることが多いか？悪い点を見つけることが多いか？','一番仲の良い友人の好きなところは？','無人島に一つだけ持って行くとしたら？','無人島に誰か一人だけ連れて行くとしたら？','自分の性格を一言で表すと？','自分の長所はどこか？','自分の短所はどこか？','父親と母親、どちらに似ている？','自分の強みだと感じるところは？','自分の弱みだと感じるところは？']);
+
+  // ─ Level 3: 性格② ─
+  const L3 = 'レベル③：性格について②';
+  ['前回の100問に答えたことで、得たものは何か？','自分の性格をより深く知ることで、自分をどう変えたいか？','自分の性格を一言で表すと？','自分の長所はどこか？','自分の短所はどこか？','父親と母親、どちらに似ている？','自分の強みだったと感じるところは？','自分の弱みだったと感じるところは？'].forEach(t=>q(L3+'/はじめに',t));
+  fp(['幼少期','小学校','中学校'], L3,
+    ['性格は外交的だったか？内向的だったか？','コミュニケーションは得意だったか？苦手だったか？','初対面の人でも、気軽に打ち解けられたか？','一人でいるのが好きだったか？複数人といるのが好きだったか？','人の良い点を見つけることが多かった？悪い点を見つけることが多かった？','一番仲の良かった友人の好きなところは？','無人島に一つだけ持って行くとしたら何を選んだ？','無人島に一人だけ連れて行くとしたら誰を選んだ？']);
+  fp(['高校','大学','社会人20代','現在'], L3,
+    ['一番努力した経験は？','一番影響を受けた出来事は？','一番影響を受けた人は？','周囲と協力して成し遂げた、一番大きなことは？','生き方や考え方を刺激された経験は？','一番嬉しかった言葉は？','一番悲しかったことは？','一番苦しかった経験は？','一番嬉しかったことは？','一番楽しかった経験は？','一番幸せな出来事は？','一番の成功体験は？','一番誇れる経験は？','一番感動した経験は？']);
+
+  // ─ Level 4: 経験① ─
+  const L4 = 'レベル④：経験について①';
+  fp(['小学校','中学校','高校'], L4,
+    ['一番嬉しかったことは？','一番楽しかった経験は？','一番幸せな出来事は？','一番の成功体験は？','一番誇れる経験は？','一番感動した経験は？','一番努力した経験は？','一番影響を受けた出来事は？','一番影響を受けた人は？','周囲と協力して成し遂げた、一番大きなことは？','生き方や考え方を刺激された経験は？','一番嬉しかった言葉は？','一番悲しかったことは？','一番苦しかった経験は？']);
+  fp(['高校','大学','社会人20代','現在'], L4,
+    ['一番大きな嘘は？','つかれた一番大きな嘘は？','一番後悔していることは？','最も自尊心が傷ついた経験は？','一番怒りを覚えた出来事は？','一番許せない出来事は？','最も反感をかった出来事は？','一番大きな秘密は？','一番裏切られたと感じた出来事は？','一番の挫折体験は？','一番恥ずかしい経験は？','一番影響を与えた出来事は？','一番影響を与えた人は？','一番悲しかった言葉は？']);
+
+  // ─ Level 5: 経験② ─
+  const L5 = 'レベル⑤：経験について②';
+  fp(['幼少期','小学校','中学校','高校','大学','社会人20代','現在'], L5,
+    ['一番裏切られたと感じた出来事は？','一番の挫折体験は？','一番恥ずかしい経験は？','一番影響を与えた出来事は？','一番影響を与えた人は？','一番悲しかった言葉は？','一番大きな嘘は？','つかれた一番大きな嘘は？','一番後悔していることは？','最も自尊心が傷ついた経験は？','一番怒りを覚えた出来事は？','一番許せない出来事は？','最も反感をかった出来事は？','一番大きな秘密は？']);
+
+  // ─ Level 6: 家族・親戚 ─
+  const L6 = 'レベル⑥：家族・親戚について';
+  fp(['幼少期','小学校','中学校','高校','大学','社会人20代','現在'], L6,
+    ['父親との関係は？','母親との関係は？','兄弟・姉妹との関係は？','祖父母との関係は？','親戚との関係は？','家族の中でどのような役割だったか？','家族との間で、一番良い思い出は？','家族との間で、一番苦い思い出は？','家族間の約束事はあったか？','家庭の経済状況はどうだったか？','ペットに関する思い出は？']);
+  fp(['大学','社会人20代','現在'], L6, ['パートナーとの関係は？']);
+
+  // ─ Level 7: 友人・知人 ─
+  const L7 = 'レベル⑦：友人・知人について';
+  fp(['幼少期','小学校','中学校','高校','大学','社会人20代','現在'], L7,
+    ['同世代で気が合ったのはどのようなタイプの人か？','年上で気が合ったのはどのようなタイプの人か？','年下で気が合ったのはどのようなタイプの人か？','苦手だったのはどのようなタイプの人か？','尊敬していたのはどのようなタイプの人か？','どのようなタイプの人に恋愛感情を抱いていたか？','友人にどのような接し方をしていたか？','年上にどのような接し方をしていたか？','年下にどのような接し方をしていたか？','好きな人／恋人にどのような接し方をしていたか？']);
+
+  // ─ Level 8: 勉強・仕事① ─
+  const L8 = 'レベル⑧：勉強・仕事について①';
+  fp(['幼少期','小学校','中学校'], L8,
+    ['勉強/習い事を通じて得たものは？','一番達成したかった目標は？','努力が実った経験は？','挫折した経験は？','授業中積極的に発言をしていたか？','進学先を選んだ理由は？','好きな教科/嫌いな教科は？','宿題に対する姿勢は？']);
+  fp(['高校'], L8,
+    ['勉強/部活を通じて得たものは？','一番達成したかった目標は？','努力が実った経験は？','挫折した経験は？','授業中積極的に発言をしていたか？','進学先を選んだ理由は？','好きな教科/嫌いな教科は？','アルバイトで達成したかった目標は？']);
+  fp(['大学','社会人20代','現在'], L8,
+    ['ゼミ/仕事で達成したかった目標は？','上司/教授からのフィードバックは？','副業/複業・社外活動での経験は？','今一番勉強したいこと/やりたい仕事は？','仕事を通じて得たものは？','努力が実った経験は？','挫折した経験は？','一番影響を受けた上司・先輩は？']);
+
+  // ─ Level 9: 勉強・仕事② ─
+  const L9 = 'レベル⑨：勉強・仕事について②';
+  fp(['保育園','幼少期','小学校','中学校','高校','大学','社会人20代','現在'], L9,
+    ['委員会や課外活動で達成したかった目標は？','委員会や課外活動で努力が実った経験は？','委員会や課外活動で挫折した経験は？','一番熱中していた取り組みは？','先生/先輩から言われて印象に残っている言葉は？']);
+
+  // ─ Level 10: 趣味・嗜好 ─
+  const L10 = 'レベル⑩：趣味・嗜好について';
+  fp(['幼少期','小学校','中学校','高校','大学','社会人20代','現在'], L10,
+    ['好きだった食べ物/飲み物は？','嫌いだった食べ物は？','好きだった時間の過ごし方は？','好きだった場所は？','好きだったゲーム・漫画・本は？','好きだった映画・テレビ・音楽は？','好きだった色・アートは？','好きだったブランドは？','憧れていた人物は？','好きだった国・地域は？']);
+  ['1000問に答えたことで、何を得たのか？','今後この自己分析をどのように活かしていきたいか？','自己分析をして見つけた「人生の軸」は？'].forEach(t=>q(L10+'/まとめ',t));
+
+  return qs;
+}
+
+/* ─── SERVICE WORKER ───────────── */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+/* ─── INIT ─────────────────────── */
+if (db.questions.length === 0) {
+  db.questions = generateBuiltInQuestions();
+  persist(db);
+}
+renderSB(); renderHead(); renderList();
+</script>
+</body>
+</html>

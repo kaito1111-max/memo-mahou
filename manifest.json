@@ -1,0 +1,18 @@
+{
+  "name": "メモの魔力",
+  "short_name": "メモの魔力",
+  "description": "前田裕二式メモの魔力 — 標語・ファクト・抽象化・転用でAI自己分析",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#16213e",
+  "theme_color": "#16213e",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
