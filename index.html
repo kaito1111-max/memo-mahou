@@ -10,6 +10,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="メモの魔力">
   <link rel="manifest" href="manifest.json">
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -302,6 +305,19 @@
     .backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:99; }
     .backdrop.show { display:block; }
 
+    /* ── AUTH BAR ── */
+    .auth-bar { padding: 8px 13px; border-bottom: 1px solid rgba(255,255,255,.07); }
+    .auth-user { display:flex; align-items:center; gap:8px; }
+    .auth-avatar { width:26px; height:26px; border-radius:50%; flex-shrink:0; object-fit:cover; }
+    .auth-name { flex:1; font-size:11px; color:rgba(255,255,255,.65); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .auth-logout { background:none; border:none; color:rgba(255,255,255,.35); cursor:pointer; font-size:13px; padding:2px 5px; transition:color .12s; flex-shrink:0; }
+    .auth-logout:hover { color:rgba(255,255,255,.8); }
+    .btn-google-login { width:100%; padding:7px 10px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12); border-radius:7px; color:rgba(255,255,255,.6); font-size:11px; cursor:pointer; display:flex; align-items:center; gap:7px; justify-content:center; transition:all .15s; font-family:inherit; white-space:nowrap; }
+    .btn-google-login:hover { background:rgba(255,255,255,.12); color:rgba(255,255,255,.9); }
+    .sync-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#48bb78; margin-right:4px; vertical-align:middle; }
+    .sync-setup { font-size:10px; color:rgba(255,255,255,.3); text-align:center; padding:2px 0; cursor:pointer; text-decoration:underline dotted; }
+    .sync-setup:hover { color:rgba(255,255,255,.6); }
+
     /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
       :root { --sw: 260px; }
@@ -399,6 +415,7 @@
     <h1>✍️ メモの魔力</h1>
     <p>MAGIC OF MEMOS</p>
   </div>
+  <div class="auth-bar" id="authBar"></div>
   <div class="sb-search">
     <input id="searchInput" type="text" placeholder="メモを検索…" autocomplete="off">
   </div>
@@ -441,6 +458,127 @@
 <script>
 'use strict';
 
+/* ─── FIREBASE ──────────────── */
+const FB_CFG_KEY = 'memo_mahou_fb';
+let _fbApp = null, _fbAuth = null, _fbDb = null, _fbUser = null, _syncTimer = null;
+
+function loadFBConfig() {
+  try { return JSON.parse(localStorage.getItem(FB_CFG_KEY) || 'null'); } catch(_) { return null; }
+}
+function saveFBConfig(cfg) { localStorage.setItem(FB_CFG_KEY, JSON.stringify(cfg)); }
+
+function initFirebase() {
+  const cfg = loadFBConfig();
+  if (!cfg || !cfg.projectId) return false;
+  try {
+    if (!firebase.apps.length) {
+      _fbApp  = firebase.initializeApp(cfg);
+    } else {
+      _fbApp = firebase.app();
+    }
+    _fbAuth = firebase.auth();
+    _fbDb   = firebase.firestore();
+    _fbAuth.onAuthStateChanged(user => {
+      _fbUser = user;
+      renderAuthBar();
+      if (user) loadFromFirestore();
+    });
+    return true;
+  } catch(e) {
+    console.error('Firebase init error:', e);
+    return false;
+  }
+}
+
+async function signInWithGoogle() {
+  if (!_fbAuth) { toast('⚙️ 設定からFirebaseを設定してください'); return; }
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    await _fbAuth.signInWithPopup(provider);
+  } catch(e) {
+    toast('ログインに失敗: ' + e.message);
+  }
+}
+
+async function signOutFB() {
+  if (!_fbAuth) return;
+  await _fbAuth.signOut();
+  toast('ログアウトしました');
+}
+
+async function syncToFirestore() {
+  if (!_fbUser || !_fbDb) return;
+  try {
+    const toSave = JSON.parse(JSON.stringify(db));
+    if (toSave.settings) delete toSave.settings.apiKey;
+    await _fbDb.doc(`users/${_fbUser.uid}/data/main`).set(toSave);
+  } catch(e) {
+    console.error('Firestore sync error:', e);
+  }
+}
+
+function debouncedSync() {
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(syncToFirestore, 2000);
+}
+
+async function loadFromFirestore() {
+  if (!_fbUser || !_fbDb) return;
+  try {
+    const snap = await _fbDb.doc(`users/${_fbUser.uid}/data/main`).get();
+    if (!snap.exists) {
+      await syncToFirestore();
+      toast('☁️ データをクラウドに保存しました ✓');
+      return;
+    }
+    const remote = snap.data();
+    const localTs  = db._ts  || 0;
+    const remoteTs = remote._ts || 0;
+    if (remoteTs > localTs) {
+      const savedApiKey      = db.settings?.apiKey || '';
+      const savedProvider    = db.settings?.apiProvider || 'groq';
+      const savedOllama      = db.settings?.ollamaModel || 'llama3.2';
+      db = remote;
+      if (!db.settings) db.settings = {};
+      db.settings.apiKey      = savedApiKey;
+      db.settings.apiProvider = savedProvider;
+      db.settings.ollamaModel = savedOllama;
+      localStorage.setItem(SK, JSON.stringify(db));
+      toast('☁️ クラウドから同期しました ✓');
+      renderSB(); renderHead(); renderList();
+    } else {
+      await syncToFirestore();
+    }
+  } catch(e) {
+    console.error('Firestore load error:', e);
+  }
+}
+
+function renderAuthBar() {
+  const bar = document.getElementById('authBar');
+  if (!bar) return;
+  if (!loadFBConfig()) {
+    bar.innerHTML = `<div class="sync-setup" id="syncSetupLink">☁️ クラウド同期を設定する →</div>`;
+    document.getElementById('syncSetupLink')?.addEventListener('click', () => {
+      S.view='settings'; S.filter='all'; renderSB(); renderHead(); renderSettings();
+      if (window.innerWidth <= 768) closeSidebar();
+    });
+    return;
+  }
+  if (_fbUser) {
+    bar.innerHTML = `
+      <div class="auth-user">
+        ${_fbUser.photoURL ? `<img class="auth-avatar" src="${esc(_fbUser.photoURL)}" alt="">` : ''}
+        <div class="auth-name"><span class="sync-dot"></span>${esc(_fbUser.displayName || _fbUser.email || '')}</div>
+        <button class="auth-logout" id="btnLogout" title="ログアウト">↩</button>
+      </div>`;
+    document.getElementById('btnLogout')?.addEventListener('click', signOutFB);
+  } else {
+    bar.innerHTML = `<button class="btn-google-login" id="btnGoogleLogin"><svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Googleでログイン</button>`;
+    document.getElementById('btnGoogleLogin')?.addEventListener('click', signInWithGoogle);
+  }
+}
+
 /* ─── CONSTANTS ─────────────── */
 const SK = 'memo_mahou_v4';
 const DEFAULT_GENRES = ['ビジネス', '読書', '日常', 'アイデア', '学習'];
@@ -454,7 +592,7 @@ function load() {
   try { const r = localStorage.getItem(SK); if (r) return JSON.parse(r); } catch(_) {}
   return { memos: [], genres: [...DEFAULT_GENRES], settings: { apiKey: '', apiProvider: 'groq', ollamaModel: 'llama3.2' }, questions: [], analyses: {} };
 }
-const persist = d => localStorage.setItem(SK, JSON.stringify(d));
+const persist = d => { d._ts = Date.now(); localStorage.setItem(SK, JSON.stringify(d)); debouncedSync(); };
 
 /* ─── STATE ───────────────────── */
 let db = load();
@@ -1149,6 +1287,29 @@ function renderSettings() {
           <button class="btn btn-danger" id="btnClearQ">質問データをリセット</button>
         </div>
       </div>
+
+      <div class="settings-card" id="fbCard">
+        <h2>☁️ クラウド同期（Firebase）</h2>
+        <p>Google アカウントでログインすると、複数デバイスでデータを同期できます。Firebase は無料枠で使えます。</p>
+        <div id="fbAuthStatus" style="margin-bottom:14px"></div>
+        <div class="setting-item">
+          <label>Firebase 設定（JSON）</label>
+          <textarea class="mi" id="sFbConfig" rows="9" style="width:100%;font-family:monospace;font-size:11px;resize:vertical;line-height:1.6" placeholder='{&#10;  "apiKey": "AIza...",&#10;  "authDomain": "your-project.firebaseapp.com",&#10;  "projectId": "your-project",&#10;  "storageBucket": "your-project.appspot.com",&#10;  "messagingSenderId": "...",&#10;  "appId": "..."&#10;}'></textarea>
+          <div class="setting-hint">
+            ① <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → 「プロジェクトを作成」<br>
+            ② 左メニュー「Authentication」→「ログイン方法」→「Google」を有効化<br>
+            &nbsp;&nbsp;&nbsp;→「承認済みドメイン」に <code>kaito1111-max.github.io</code> を追加<br>
+            ③ 左メニュー「Firestore Database」→「データベースを作成」（テストモードで開始）<br>
+            &nbsp;&nbsp;&nbsp;→「ルール」タブを開き以下を貼り付けて公開：<br>
+            &nbsp;&nbsp;&nbsp;<code>match /users/{uid}/data/{doc=**} { allow read, write: if request.auth.uid == uid; }</code><br>
+            ④ 「プロジェクトの設定」→「マイアプリ」→「ウェブ」→ 設定オブジェクトをコピーして上に貼り付け
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <button class="btn btn-primary" id="btnSaveFb">設定を保存して同期を有効化</button>
+          <button class="btn btn-ghost" id="btnClearFb" style="display:none">設定を削除</button>
+        </div>
+      </div>
     </div>`;
 
   document.getElementById('sProvider').addEventListener('change', e => {
@@ -1188,6 +1349,54 @@ function renderSettings() {
   document.getElementById('btnClearQ')?.addEventListener('click', () => {
     if (!confirm('質問データと分析データをすべてリセットしますか？')) return;
     db.questions=[]; db.analyses={}; persist(db); toast('リセットしました'); renderSettings();
+  });
+
+  // Firebase settings
+  const existingFbCfg = loadFBConfig();
+  const fbCfgTA = document.getElementById('sFbConfig');
+  if (fbCfgTA && existingFbCfg) fbCfgTA.value = JSON.stringify(existingFbCfg, null, 2);
+
+  const fbStatusEl = document.getElementById('fbAuthStatus');
+  if (fbStatusEl) {
+    if (_fbUser) {
+      fbStatusEl.innerHTML = `<div class="api-status ok">✅ 同期中：${esc(_fbUser.displayName||_fbUser.email||'')} <button id="btnLogoutSettings" style="margin-left:8px;background:none;border:1px solid #38a169;color:#276749;border-radius:5px;padding:2px 8px;cursor:pointer;font-size:11px">ログアウト</button></div>`;
+      document.getElementById('btnLogoutSettings')?.addEventListener('click', ()=>{ signOutFB(); renderSettings(); });
+    } else if (existingFbCfg) {
+      fbStatusEl.innerHTML = `<div class="api-status" style="background:#ebf4ff;color:#3182ce">🔄 Firebase設定済み・未ログイン <button id="btnLoginSettings" style="margin-left:8px;background:none;border:1px solid #3182ce;color:#2b6cb0;border-radius:5px;padding:2px 8px;cursor:pointer;font-size:11px">Googleでログイン</button></div>`;
+      document.getElementById('btnLoginSettings')?.addEventListener('click', signInWithGoogle);
+    } else {
+      fbStatusEl.innerHTML = `<div class="api-status err">未設定　—　下のJSONを入力してください</div>`;
+    }
+  }
+
+  const clearFbBtn = document.getElementById('btnClearFb');
+  if (clearFbBtn && existingFbCfg) clearFbBtn.style.display = '';
+
+  document.getElementById('btnSaveFb')?.addEventListener('click', () => {
+    const str = document.getElementById('sFbConfig')?.value.trim();
+    if (!str) { toast('設定JSONを貼り付けてください'); return; }
+    try {
+      const cfg = JSON.parse(str);
+      if (!cfg.projectId || !cfg.apiKey) throw new Error('projectId または apiKey がありません');
+      saveFBConfig(cfg);
+      if (!_fbApp) {
+        initFirebase();
+        toast('Firebase設定を保存しました ✓ Googleでログインしてください');
+      } else {
+        toast('設定を保存しました。ページを再読み込みすると反映されます。');
+      }
+      renderSettings();
+    } catch(e) {
+      toast('JSONが正しくありません: ' + e.message);
+    }
+  });
+
+  document.getElementById('btnClearFb')?.addEventListener('click', () => {
+    if (!confirm('Firebase設定を削除しますか？')) return;
+    localStorage.removeItem(FB_CFG_KEY);
+    toast('設定を削除しました');
+    renderSettings();
+    renderAuthBar();
   });
 }
 
@@ -1606,6 +1815,8 @@ if (db.questions.length === 0) {
   db.questions = generateBuiltInQuestions();
   persist(db);
 }
+initFirebase();
+renderAuthBar();
 renderSB(); renderHead(); renderList();
 </script>
 </body>
