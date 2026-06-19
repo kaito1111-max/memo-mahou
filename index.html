@@ -482,6 +482,26 @@
     .align-empty p  { font-size: 13px; line-height: 1.7; }
     .align-count { font-size: 11px; color: var(--muted); }
 
+    /* ── MINI CALENDAR ── */
+    .mini-cal { padding: 10px 12px 6px; }
+    .mini-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .mini-cal-title { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.85); }
+    .mini-cal-nav { background: none; border: none; color: rgba(255,255,255,.45); font-size: 14px; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: all .12s; }
+    .mini-cal-nav:hover { color: #fff; background: rgba(255,255,255,.1); }
+    .mini-cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+    .mini-cal-dow { font-size: 9px; font-weight: 700; color: rgba(255,255,255,.28); text-align: center; padding: 2px 0 4px; letter-spacing: .5px; }
+    .mini-cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: 500; color: rgba(255,255,255,.55); position: relative; transition: all .12s; }
+    .mini-cal-day:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .mini-cal-day.has-memo { color: rgba(255,255,255,.9); font-weight: 700; }
+    .mini-cal-day.is-today { background: var(--accent); color: #fff !important; font-weight: 700; }
+    .mini-cal-day.is-today:hover { background: #c8304d; }
+    .mini-cal-day.active { background: rgba(233,69,96,.35); color: #fff; outline: 1.5px solid var(--accent); }
+    .mini-cal-day.empty { cursor: default; }
+    .mini-cal-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); position: absolute; bottom: 3px; }
+    .mini-cal-day.is-today .mini-cal-dot { background: rgba(255,255,255,.8); }
+    .mini-cal-day.other-month { color: rgba(255,255,255,.18); }
+    .mini-cal-day.other-month.has-memo { color: rgba(255,255,255,.4); }
+
     /* ── PULSE CARD ── */
     .pulse-overlay { position:fixed; bottom:0; left:0; right:0; background:#fff; border-radius:20px 20px 0 0; padding:28px 24px 36px; box-shadow:0 -6px 40px rgba(0,0,0,.15); z-index:300; transform:translateY(100%); transition:transform .32s cubic-bezier(.4,0,.2,1); max-width:560px; margin:0 auto; }
     .pulse-overlay.show { transform:translateY(0); }
@@ -767,6 +787,8 @@ const S = {
   chatHistory: [],
   aiLoading: false,
   todoFilter: 'pending',
+  calYear:  new Date().getFullYear(),
+  calMonth: new Date().getMonth(),
 };
 
 /* ─── UTILS ───────────────────── */
@@ -1087,48 +1109,82 @@ function renderSB() {
   const answered = Object.keys(db.analyses).length;
   const total    = db.questions.length;
 
+  const todayStr = now(); // YYYY-MM-DD
+  const today    = new Date(todayStr+'T00:00:00');
+
+  /* ── ミニカレンダー ── */
+  const cy = S.calYear, cm = S.calMonth;
+  const firstDay = new Date(cy, cm, 1);
+  const lastDay  = new Date(cy, cm+1, 0);
+  const startDow = firstDay.getDay(); // 0=日
+  const daysInMonth = lastDay.getDate();
+  const calMonthStr = `${cy}-${String(cm+1).padStart(2,'0')}`;
+
+  let calHtml = `<div class="mini-cal">
+    <div class="mini-cal-head">
+      <button class="mini-cal-nav" id="calPrev">‹</button>
+      <span class="mini-cal-title">${cy}年${cm+1}月</span>
+      <button class="mini-cal-nav" id="calNext">›</button>
+    </div>
+    <div class="mini-cal-grid">
+      ${'日月火水木金土'.split('').map(d=>`<div class="mini-cal-dow">${d}</div>`).join('')}`;
+
+  // 前月の空白マス
+  for (let i=0;i<startDow;i++) calHtml+=`<div class="mini-cal-day empty"></div>`;
+
+  for (let d=1;d<=daysInMonth;d++) {
+    const ds=`${cy}-${String(cm+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const hasMemo=!!byDate[ds];
+    const isToday=ds===todayStr;
+    const isActive=S.filter==='date:'+ds;
+    let cls='mini-cal-day';
+    if (isToday)  cls+=' is-today';
+    if (hasMemo)  cls+=' has-memo';
+    if (isActive) cls+=' active';
+    const dot=hasMemo&&!isToday?'<span class="mini-cal-dot"></span>':'';
+    calHtml+=`<div class="${cls}" data-nav="date:${ds}">${d}${dot}</div>`;
+  }
+
+  calHtml+=`</div></div>`;
+
+  /* 週グループ（月をまたいで8日以上のデータがあれば表示） */
+  function isoWeek(d) {
+    const dt=new Date(d+'T00:00:00'), day=(dt.getDay()+6)%7;
+    const mon=new Date(dt); mon.setDate(dt.getDate()-day);
+    return `${mon.getFullYear()}-W${String(Math.ceil((mon-new Date(mon.getFullYear(),0,1))/86400000/7)+1).padStart(2,'0')}:${mon.getMonth()+1}/${mon.getDate()}`;
+  }
+  function monthKey(d){ return d.slice(0,7); }
+  const byWeek={}, byMonth={};
+  dates.forEach(d=>{
+    const wk=isoWeek(d); byWeek[wk]=(byWeek[wk]||0)+byDate[d];
+    const mo=monthKey(d); byMonth[mo]=(byMonth[mo]||0)+byDate[d];
+  });
+  const spanDays = dates.length>=2 ? (new Date(dates[0]+'T00:00:00')-new Date(dates[dates.length-1]+'T00:00:00'))/86400000+1 : 0;
+  const spanMonths = Object.keys(byMonth).length;
+
   let html = '';
   html += navI('all','📋','すべてのメモ', db.memos.length);
-  if (dates.length) {
-    /* 日付→週キー・月キー計算 */
-    function isoWeek(d) {
-      const dt=new Date(d+'T00:00:00'), day=(dt.getDay()+6)%7;
-      const mon=new Date(dt); mon.setDate(dt.getDate()-day);
-      return `${mon.getFullYear()}-W${String(Math.ceil((mon-new Date(mon.getFullYear(),0,1))/86400000/7)+1).padStart(2,'0')}:${mon.getMonth()+1}/${mon.getDate()}`;
-    }
-    function monthKey(d){ return d.slice(0,7); }
-    const byWeek={}, byMonth={};
-    dates.forEach(d=>{
-      const wk=isoWeek(d); byWeek[wk]=(byWeek[wk]||0)+byDate[d];
-      const mo=monthKey(d); byMonth[mo]=(byMonth[mo]||0)+byDate[d];
+  html += `<div class="nav-section">カレンダー</div>`;
+  html += calHtml;
+
+  /* 月グループ（2ヶ月以上） */
+  if (spanMonths >= 2) {
+    html += `<div class="nav-divider"></div>`;
+    Object.keys(byMonth).sort((a,b)=>b.localeCompare(a)).forEach(mo=>{
+      const [y,m]=mo.split('-'); const label=`${y}年${Number(m)}月`;
+      const act=(S.filter==='month:'+mo)?' active':'';
+      html+=`<div class="nav-item${act}" data-nav="month:${mo}"><div class="nav-label">📆 <span>${label}</span></div><span class="nav-count">${byMonth[mo]}</span></div>`;
     });
-    const spanDays=(new Date(dates[0]+'T00:00:00')-new Date(dates[dates.length-1]+'T00:00:00'))/(86400000)+1;
-    const spanMonths=Object.keys(byMonth).length;
+  }
 
-    html += `<div class="nav-section">日付別</div>`;
-
-    /* 月グループ（2ヶ月以上のデータがあれば表示） */
-    if (spanMonths >= 2) {
-      Object.keys(byMonth).sort((a,b)=>b.localeCompare(a)).forEach(mo=>{
-        const [y,m]=mo.split('-'); const label=`${y}年${Number(m)}月`;
-        const act=(S.filter==='month:'+mo)?' active':'';
-        html+=`<div class="nav-item${act}" data-nav="month:${mo}"><div class="nav-label">📆 <span>${label}</span></div><span class="nav-count">${byMonth[mo]}</span></div>`;
-      });
-      html+=`<div class="nav-divider"></div>`;
-    }
-
-    /* 週グループ（8日以上のデータがあれば表示） */
-    if (spanDays >= 8) {
-      Object.keys(byWeek).sort((a,b)=>b.localeCompare(a)).slice(0,8).forEach(wk=>{
-        const [key,label]=wk.split(':');
-        const act=(S.filter==='week:'+key)?' active':'';
-        html+=`<div class="nav-item${act}" data-nav="week:${key}"><div class="nav-label">📅 <span>週: ${label}〜</span></div><span class="nav-count">${byWeek[wk]}</span></div>`;
-      });
-      html+=`<div class="nav-divider"></div>`;
-    }
-
-    /* 個別日付（最新14日分） */
-    dates.slice(0,14).forEach(d => { const dt=new Date(d+'T00:00:00'); html+=navI('date:'+d,'📅',`${dt.getMonth()+1}/${dt.getDate()}`,byDate[d]); });
+  /* 週グループ（8日以上） */
+  if (spanDays >= 8) {
+    html += `<div class="nav-divider"></div>`;
+    Object.keys(byWeek).sort((a,b)=>b.localeCompare(a)).slice(0,8).forEach(wk=>{
+      const [key,label]=wk.split(':');
+      const act=(S.filter==='week:'+key)?' active':'';
+      html+=`<div class="nav-item${act}" data-nav="week:${key}"><div class="nav-label">📅 <span>週: ${label}〜</span></div><span class="nav-count">${byWeek[wk]}</span></div>`;
+    });
   }
   html += `<div class="nav-section">ジャンル別</div>`;
   db.genres.forEach(g => { html += navIG('genre:'+g, g, byGenre[g]||0); });
@@ -1145,6 +1201,18 @@ function renderSB() {
   html += navI('settings','⚙️','AI設定', null);
 
   document.getElementById('sbNav').innerHTML = html;
+
+  /* カレンダー前後月ナビ */
+  document.getElementById('calPrev')?.addEventListener('click', e => {
+    e.stopPropagation();
+    S.calMonth--; if (S.calMonth < 0) { S.calMonth=11; S.calYear--; }
+    renderSB();
+  });
+  document.getElementById('calNext')?.addEventListener('click', e => {
+    e.stopPropagation();
+    S.calMonth++; if (S.calMonth > 11) { S.calMonth=0; S.calYear++; }
+    renderSB();
+  });
 }
 function navI(key, icon, label, cnt) {
   const act = (S.view === key || S.filter === key || (key==='analysis' && (S.view.startsWith('analysis')||S.view==='ai-session')) || (key==='todos' && S.view==='todos')) ? ' active' : '';
