@@ -499,6 +499,28 @@
     .mini-cal-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--accent); position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); }
     .mini-cal-day.is-today .mini-cal-dot { background: rgba(255,255,255,.75); }
 
+    /* ── READ-ONLY MEMO VIEW ── */
+    .memo-view { max-width: 860px; margin: 0 auto; padding: 4px 0 40px; }
+    .memo-view-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+    .memo-view-date { font-size: 12.5px; color: var(--muted); }
+    .memo-view-gtag { font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 12px; }
+    .memo-view-title { font-size: 18px; font-weight: 700; color: var(--text); flex: 1; }
+    .memo-view-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; background: #fff8e1; color: #b7791f; border: 1px solid #fbd38d; border-radius: 6px; padding: 3px 9px; }
+    .memo-view-rows { display: flex; flex-direction: column; gap: 16px; }
+    .memo-view-row { background: var(--white); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+    .memo-view-row-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--bg); }
+    .memo-view-num { font-size: 10px; font-weight: 700; color: var(--muted); }
+    .memo-view-hyogo { font-size: 14px; font-weight: 700; color: var(--text); }
+    .memo-view-clr { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .memo-view-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+    .memo-view-col { padding: 12px 14px; border-right: 1px solid var(--border); }
+    .memo-view-col:last-child { border-right: none; }
+    .memo-view-col-label { font-size: 9.5px; font-weight: 700; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+    .memo-view-col-body { font-size: 13.5px; color: var(--light); line-height: 1.7; white-space: pre-wrap; }
+    .memo-view-col-body.empty { color: var(--border); font-style: italic; }
+    .memo-view-todo-btn { margin: 8px 14px 12px; }
+    @media(max-width:640px) { .memo-view-cols { grid-template-columns: 1fr; } .memo-view-col { border-right: none; border-bottom: 1px solid var(--border); } .memo-view-col:last-child { border-bottom: none; } }
+
     /* ── PULSE CARD ── */
     .pulse-overlay { position:fixed; bottom:0; left:0; right:0; background:#fff; border-radius:20px 20px 0 0; padding:28px 24px 36px; box-shadow:0 -6px 40px rgba(0,0,0,.15); z-index:300; transform:translateY(100%); transition:transform .32s cubic-bezier(.4,0,.2,1); max-width:560px; margin:0 auto; }
     .pulse-overlay.show { transform:translateY(0); }
@@ -1226,7 +1248,13 @@ function renderHead() {
   const L = document.getElementById('headL');
   const R = document.getElementById('headR');
 
-  if (S.view === 'edit') {
+  if (S.view === 'view') {
+    L.innerHTML=`<button class="btn-back" id="btnBack">← 戻る</button><div><div class="head-title">${esc(S.memo.title||'メモを見る')}</div></div>`;
+    R.innerHTML=`<button class="btn btn-line" id="btnShare">LINE共有</button><button class="btn btn-danger" id="btnDel">削除</button>`;
+    document.getElementById('btnBack')?.addEventListener('click', goList);
+    document.getElementById('btnShare')?.addEventListener('click', ()=>lineShare(S.memo.id));
+    document.getElementById('btnDel')?.addEventListener('click',   ()=>delMemo(S.memo.id));
+  } else if (S.view === 'edit') {
     L.innerHTML=`<button class="btn-back" id="btnBack">← 戻る</button><div><div class="head-title">${S.memo._new?'新しいメモ':'メモを編集'}</div></div>`;
     R.innerHTML=S.memo._new?'':`<button class="btn btn-line" id="btnShare">LINE共有</button><button class="btn btn-danger" id="btnDel">削除</button>`;
     document.getElementById('btnBack')?.addEventListener('click', goList);
@@ -1384,7 +1412,39 @@ function newMemo() {
 function openMemo(id) {
   const m=db.memos.find(x=>x.id===id); if(!m)return;
   S.memo=JSON.parse(JSON.stringify(m)); S.memo._new=false;
-  S.view='edit'; renderSB(); renderHead(); renderEdit();
+  const isPast = m.date < now();
+  S.view = isPast ? 'view' : 'edit';
+  renderSB(); renderHead(); isPast ? renderView() : renderEdit();
+}
+function renderView() {
+  const m=S.memo, body=document.getElementById('mainBody');
+  const clrMap={green:'var(--green)',blue:'var(--blue)',red:'var(--red)','':`var(--border)`};
+  const rows=m.rows.map((r,i)=>{
+    const hasTodo=r.app&&r.app.trim();
+    return `<div class="memo-view-row">
+      <div class="memo-view-row-head">
+        <span class="memo-view-num">#${i+1}</span>
+        <span class="memo-view-clr" style="background:${clrMap[r.clr||'']}"></span>
+        <span class="memo-view-hyogo">${esc(r.hyogo)||'（標語なし）'}</span>
+      </div>
+      <div class="memo-view-cols">
+        <div class="memo-view-col"><div class="memo-view-col-label">ファクト</div><div class="memo-view-col-body${r.fact?'':' empty'}">${r.fact?esc(r.fact):'未記入'}</div></div>
+        <div class="memo-view-col"><div class="memo-view-col-label">抽象化</div><div class="memo-view-col-body${r.abs?'':' empty'}">${r.abs?esc(r.abs):'未記入'}</div></div>
+        <div class="memo-view-col"><div class="memo-view-col-label">転用</div><div class="memo-view-col-body${r.app?'':' empty'}">${r.app?esc(r.app):'未記入'}</div></div>
+      </div>
+      ${hasTodo?`<div class="memo-view-todo-btn"><button class="btn btn-ghost" style="font-size:12px;padding:5px 12px" onclick="addTodoFromRow('${m.id}','${esc(m.title)}',${JSON.stringify(r.app)})">📋 ToDoに追加</button></div>`:''}
+    </div>`;
+  }).join('');
+  const color=gc(m.genre);
+  body.innerHTML=`<div class="memo-view">
+    <div class="memo-view-meta">
+      <span class="memo-view-date">📅 ${fmtDate(m.date)}</span>
+      <span class="memo-view-gtag" style="background:${color}18;color:${color}">${esc(m.genre)}</span>
+      <span class="memo-view-badge">🔒 閲覧専用</span>
+    </div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:20px">${esc(m.title)||'（タイトルなし）'}</div>
+    <div class="memo-view-rows">${rows}</div>
+  </div>`;
 }
 function saveMemo() {
   S.memo.updatedAt=Date.now();
