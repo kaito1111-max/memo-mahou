@@ -1090,8 +1090,45 @@ function renderSB() {
   let html = '';
   html += navI('all','📋','すべてのメモ', db.memos.length);
   if (dates.length) {
+    /* 日付→週キー・月キー計算 */
+    function isoWeek(d) {
+      const dt=new Date(d+'T00:00:00'), day=(dt.getDay()+6)%7;
+      const mon=new Date(dt); mon.setDate(dt.getDate()-day);
+      return `${mon.getFullYear()}-W${String(Math.ceil((mon-new Date(mon.getFullYear(),0,1))/86400000/7)+1).padStart(2,'0')}:${mon.getMonth()+1}/${mon.getDate()}`;
+    }
+    function monthKey(d){ return d.slice(0,7); }
+    const byWeek={}, byMonth={};
+    dates.forEach(d=>{
+      const wk=isoWeek(d); byWeek[wk]=(byWeek[wk]||0)+byDate[d];
+      const mo=monthKey(d); byMonth[mo]=(byMonth[mo]||0)+byDate[d];
+    });
+    const spanDays=(new Date(dates[0]+'T00:00:00')-new Date(dates[dates.length-1]+'T00:00:00'))/(86400000)+1;
+    const spanMonths=Object.keys(byMonth).length;
+
     html += `<div class="nav-section">日付別</div>`;
-    dates.forEach(d => { const dt=new Date(d+'T00:00:00'); html+=navI('date:'+d,'📅',`${dt.getMonth()+1}/${dt.getDate()}`,byDate[d]); });
+
+    /* 月グループ（2ヶ月以上のデータがあれば表示） */
+    if (spanMonths >= 2) {
+      Object.keys(byMonth).sort((a,b)=>b.localeCompare(a)).forEach(mo=>{
+        const [y,m]=mo.split('-'); const label=`${y}年${Number(m)}月`;
+        const act=(S.filter==='month:'+mo)?' active':'';
+        html+=`<div class="nav-item${act}" data-nav="month:${mo}"><div class="nav-label">📆 <span>${label}</span></div><span class="nav-count">${byMonth[mo]}</span></div>`;
+      });
+      html+=`<div class="nav-divider"></div>`;
+    }
+
+    /* 週グループ（8日以上のデータがあれば表示） */
+    if (spanDays >= 8) {
+      Object.keys(byWeek).sort((a,b)=>b.localeCompare(a)).slice(0,8).forEach(wk=>{
+        const [key,label]=wk.split(':');
+        const act=(S.filter==='week:'+key)?' active':'';
+        html+=`<div class="nav-item${act}" data-nav="week:${key}"><div class="nav-label">📅 <span>週: ${label}〜</span></div><span class="nav-count">${byWeek[wk]}</span></div>`;
+      });
+      html+=`<div class="nav-divider"></div>`;
+    }
+
+    /* 個別日付（最新14日分） */
+    dates.slice(0,14).forEach(d => { const dt=new Date(d+'T00:00:00'); html+=navI('date:'+d,'📅',`${dt.getMonth()+1}/${dt.getDate()}`,byDate[d]); });
   }
   html += `<div class="nav-section">ジャンル別</div>`;
   db.genres.forEach(g => { html += navIG('genre:'+g, g, byGenre[g]||0); });
@@ -1157,6 +1194,8 @@ function renderHead() {
   } else {
     let title='すべてのメモ'; const f=S.filter;
     if (f.startsWith('date:')) title=fmtDate(f.replace('date:',''));
+    else if (f.startsWith('week:')) { const [y,w]=f.replace('week:','').split('-W'); title=`${y}年 第${Number(w)}週`; }
+    else if (f.startsWith('month:')) { const [y,m]=f.replace('month:','').split('-'); title=`${y}年${Number(m)}月`; }
     else if (f.startsWith('genre:')) title=f.replace('genre:','');
     else if (f==='search') title=`「${S.search}」の検索結果`;
     const n=filtered().length;
@@ -1169,7 +1208,18 @@ function renderHead() {
 function filtered() {
   let list=[...db.memos]; const f=S.filter;
   if (f.startsWith('date:')) list=list.filter(m=>m.date===f.replace('date:',''));
-  else if (f.startsWith('genre:')) list=list.filter(m=>m.genre===f.replace('genre:',''));
+  else if (f.startsWith('week:')) {
+    const wk=f.replace('week:','');
+    list=list.filter(m=>{
+      const dt=new Date(m.date+'T00:00:00'), day=(dt.getDay()+6)%7;
+      const mon=new Date(dt); mon.setDate(dt.getDate()-day);
+      const mk=`${mon.getFullYear()}-W${String(Math.ceil((mon-new Date(mon.getFullYear(),0,1))/86400000/7)+1).padStart(2,'0')}`;
+      return mk===wk;
+    });
+  } else if (f.startsWith('month:')) {
+    const mo=f.replace('month:','');
+    list=list.filter(m=>m.date.startsWith(mo));
+  } else if (f.startsWith('genre:')) list=list.filter(m=>m.genre===f.replace('genre:',''));
   else if (f==='search') { const q=S.search.toLowerCase(); list=list.filter(m=>[m.title,m.genre,...m.rows.flatMap(r=>[r.hyogo,r.fact,r.abs,r.app])].join(' ').toLowerCase().includes(q)); }
   return list.sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt);
 }
