@@ -102,6 +102,37 @@
     .color-dots { display: flex; gap: 3px; }
     .cdot { width: 7px; height: 7px; border-radius: 50%; }
 
+    /* ── TIMELINE (すべてのメモ / ジャンル別) ── */
+    .timeline { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 0; }
+    .tl-date-group { margin-bottom: 24px; }
+    .tl-date-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 0 2px; }
+    .tl-date-label { font-size: 12px; font-weight: 700; color: var(--text); }
+    .tl-date-today { font-size: 10px; font-weight: 700; background: var(--accent); color: #fff; padding: 1px 7px; border-radius: 10px; }
+    .tl-date-line { flex: 1; height: 1px; background: var(--border); }
+    .tl-cards { display: flex; flex-direction: column; gap: 8px; }
+    .tl-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: all .14s; box-shadow: var(--shadow); display: flex; align-items: flex-start; gap: 12px; }
+    .tl-card:hover { box-shadow: var(--shadow-lg); border-color: #d4d8e0; transform: translateX(2px); }
+    .tl-card-accent { width: 3px; border-radius: 2px; align-self: stretch; flex-shrink: 0; min-height: 36px; }
+    .tl-card-body { flex: 1; min-width: 0; }
+    .tl-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+    .tl-card-title { font-size: 13.5px; font-weight: 600; color: var(--text); flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .tl-card-gtag { font-size: 10px; padding: 2px 7px; border-radius: 10px; white-space: nowrap; flex-shrink: 0; font-weight: 500; }
+    .tl-card-preview { font-size: 12px; color: var(--light); line-height: 1.6; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .tl-card-foot { margin-top: 7px; display: flex; align-items: center; gap: 8px; }
+    .tl-card-rows { font-size: 10.5px; color: var(--muted); }
+
+    /* ── DATE VIEW (日付別) ── */
+    .date-list { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+    .dl-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; transition: all .14s; box-shadow: var(--shadow); overflow: hidden; }
+    .dl-card:hover { box-shadow: var(--shadow-lg); border-color: #d4d8e0; }
+    .dl-card-top { display: flex; align-items: center; gap: 10px; padding: 13px 16px 10px; }
+    .dl-card-accent { width: 4px; border-radius: 2px; align-self: stretch; min-height: 40px; flex-shrink: 0; }
+    .dl-card-title { font-size: 14.5px; font-weight: 700; color: var(--text); flex: 1; }
+    .dl-card-gtag { font-size: 10.5px; padding: 2px 8px; border-radius: 11px; white-space: nowrap; font-weight: 500; }
+    .dl-card-preview { font-size: 12.5px; color: var(--light); line-height: 1.65; padding: 0 16px 12px 30px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .dl-card-foot { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-top: 1px solid var(--border); background: var(--bg); }
+    .dl-card-rows { font-size: 11px; color: var(--muted); }
+
     /* ── EMPTY STATE ── */
     .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 70px 20px; text-align: center; color: var(--muted); }
     .empty-icon { font-size: 52px; margin-bottom: 18px; }
@@ -1317,10 +1348,70 @@ function filtered() {
   return list.sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt);
 }
 function renderList() {
-  const memos=filtered(), body=document.getElementById('mainBody');
-  if (!memos.length) { body.innerHTML=`<div class="empty"><div class="empty-icon">📓</div><h2>${S.filter==='all'?'さあ、メモを始めよう':'メモがありません'}</h2><p>標語・ファクト・抽象化・転用の4ステップで日常の気づきを価値に変えましょう。</p></div>`; return; }
-  body.innerHTML=`<div class="card-grid">${memos.map(cardHtml).join('')}</div>`;
-  body.querySelectorAll('.memo-card').forEach(c=>c.addEventListener('click',()=>openMemo(c.dataset.id)));
+  const memos=filtered(), body=document.getElementById('mainBody'), f=S.filter;
+  if (!memos.length) {
+    body.innerHTML=`<div class="empty"><div class="empty-icon">📓</div><h2>${f==='all'?'さあ、メモを始めよう':'メモがありません'}</h2><p>標語・ファクト・抽象化・転用の4ステップで日常の気づきを価値に変えましょう。</p></div>`;
+    return;
+  }
+  const todayStr=now();
+
+  /* ── 日付別（カレンダーで1日選択）── */
+  if (f.startsWith('date:')) {
+    body.innerHTML=`<div class="date-list">${memos.map(m=>{
+      const color=gc(m.genre);
+      const preview=m.rows.map(r=>r.hyogo||r.fact).filter(Boolean).join(' · ')||'（内容なし）';
+      const dots=[...new Set(m.rows.map(r=>r.clr).filter(Boolean))].map(c=>`<span class="cdot" style="background:var(--${c})"></span>`).join('');
+      return `<div class="dl-card" data-id="${m.id}">
+        <div class="dl-card-top">
+          <div class="dl-card-accent" style="background:${color}"></div>
+          <div class="dl-card-title">${esc(m.title||'無題のメモ')}</div>
+          <div class="dl-card-gtag" style="background:${color}18;color:${color}">${esc(m.genre)}</div>
+        </div>
+        <div class="dl-card-preview">${esc(preview)}</div>
+        <div class="dl-card-foot">
+          <span class="dl-card-rows">${m.rows.length}行</span>
+          <div class="color-dots">${dots}</div>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+    body.querySelectorAll('.dl-card').forEach(c=>c.addEventListener('click',()=>openMemo(c.dataset.id)));
+    return;
+  }
+
+  /* ── タイムライン（すべて / ジャンル / 週 / 月 / 検索）── */
+  const byDate={};
+  memos.forEach(m=>{ (byDate[m.date]||(byDate[m.date]=[])).push(m); });
+  const dates=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
+  const isGenre=f.startsWith('genre:');
+  body.innerHTML=`<div class="timeline">${dates.map(d=>{
+    const dt=new Date(d+'T00:00:00');
+    const isToday=d===todayStr;
+    const label=`${dt.getMonth()+1}月${dt.getDate()}日（${'日月火水木金土'[dt.getDay()]}）`;
+    const cards=byDate[d].map(m=>{
+      const color=gc(m.genre);
+      const preview=m.rows.map(r=>r.hyogo||r.fact).filter(Boolean).join(' · ')||'（内容なし）';
+      const dots=[...new Set(m.rows.map(r=>r.clr).filter(Boolean))].map(c=>`<span class="cdot" style="background:var(--${c})"></span>`).join('');
+      const gtag=isGenre?'':`<div class="tl-card-gtag" style="background:${color}18;color:${color}">${esc(m.genre)}</div>`;
+      return `<div class="tl-card" data-id="${m.id}">
+        <div class="tl-card-accent" style="background:${color}"></div>
+        <div class="tl-card-body">
+          <div class="tl-card-head">${gtag}<div class="tl-card-title">${esc(m.title||'無題のメモ')}</div></div>
+          <div class="tl-card-preview">${esc(preview)}</div>
+          <div class="tl-card-foot"><span class="tl-card-rows">${m.rows.length}行のメモ</span><div class="color-dots">${dots}</div></div>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="tl-date-group">
+      <div class="tl-date-header">
+        <span class="tl-date-label">${label}</span>
+        ${isToday?'<span class="tl-date-today">TODAY</span>':''}
+        <div class="tl-date-line"></div>
+        <span style="font-size:11px;color:var(--muted)">${byDate[d].length}件</span>
+      </div>
+      <div class="tl-cards">${cards}</div>
+    </div>`;
+  }).join('')}</div>`;
+  body.querySelectorAll('.tl-card').forEach(c=>c.addEventListener('click',()=>openMemo(c.dataset.id)));
 }
 function cardHtml(m) {
   const color=gc(m.genre);
