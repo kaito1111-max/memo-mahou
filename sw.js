@@ -1,4 +1,4 @@
-const CACHE = 'memo-mahou-v11';
+const CACHE = 'memo-mahou-v12';
 const FILES = ['./index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {

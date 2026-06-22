@@ -781,7 +781,7 @@ async function loadFromFirestore() {
 function renderAuthBar() {
   const bar = document.getElementById('authBar');
   if (!bar) return;
-  if (!loadFBConfig()) {
+  if (!_fbAuth) {
     bar.innerHTML = `<div class="sync-setup" id="syncSetupLink">☁️ クラウド同期を設定する →</div>`;
     document.getElementById('syncSetupLink')?.addEventListener('click', () => {
       S.view='settings'; S.filter='all'; renderSB(); renderHead(); renderSettings();
@@ -1957,24 +1957,12 @@ function renderSettings() {
 
       <div class="settings-card" id="fbCard">
         <h2>☁️ クラウド同期（Firebase）</h2>
-        <p>Google アカウントでログインすると、複数デバイスでデータを同期できます。Firebase は無料枠で使えます。</p>
+        <p>Google アカウントでログインすると、複数デバイスでデータを同期できます。</p>
         <div id="fbAuthStatus" style="margin-bottom:14px"></div>
-        <div class="setting-item">
-          <label>Firebase 設定（JSON）</label>
-          <textarea class="mi" id="sFbConfig" rows="9" style="width:100%;font-family:monospace;font-size:11px;resize:vertical;line-height:1.6" placeholder='{&#10;  "apiKey": "AIza...",&#10;  "authDomain": "your-project.firebaseapp.com",&#10;  "projectId": "your-project",&#10;  "storageBucket": "your-project.appspot.com",&#10;  "messagingSenderId": "...",&#10;  "appId": "..."&#10;}'></textarea>
-          <div class="setting-hint">
-            ① <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → 「プロジェクトを作成」<br>
-            ② 左メニュー「Authentication」→「ログイン方法」→「Google」を有効化<br>
-            &nbsp;&nbsp;&nbsp;→「承認済みドメイン」に <code>kaito1111-max.github.io</code> を追加<br>
-            ③ 左メニュー「Firestore Database」→「データベースを作成」（テストモードで開始）<br>
-            &nbsp;&nbsp;&nbsp;→「ルール」タブを開き以下を貼り付けて公開：<br>
-            &nbsp;&nbsp;&nbsp;<code>match /users/{uid}/data/{doc=**} { allow read, write: if request.auth.uid == uid; }</code><br>
-            ④ 「プロジェクトの設定」→「マイアプリ」→「ウェブ」→ 設定オブジェクトをコピーして上に貼り付け
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
-          <button class="btn btn-primary" id="btnSaveFb">設定を保存して同期を有効化</button>
-          <button class="btn btn-ghost" id="btnClearFb" style="display:none">設定を削除</button>
+        <input type="hidden" id="sFbConfig">
+        <div style="display:none">
+          <button id="btnSaveFb"></button>
+          <button id="btnClearFb"></button>
         </div>
       </div>
     </div>`;
@@ -2028,11 +2016,11 @@ function renderSettings() {
     if (_fbUser) {
       fbStatusEl.innerHTML = `<div class="api-status ok">✅ 同期中：${esc(_fbUser.displayName||_fbUser.email||'')} <button id="btnLogoutSettings" style="margin-left:8px;background:none;border:1px solid #38a169;color:#276749;border-radius:5px;padding:2px 8px;cursor:pointer;font-size:11px">ログアウト</button></div>`;
       document.getElementById('btnLogoutSettings')?.addEventListener('click', ()=>{ signOutFB(); renderSettings(); });
-    } else if (existingFbCfg) {
+    } else if (_fbAuth) {
       fbStatusEl.innerHTML = `<div class="api-status" style="background:#ebf4ff;color:#3182ce">🔄 Firebase設定済み・未ログイン <button id="btnLoginSettings" style="margin-left:8px;background:none;border:1px solid #3182ce;color:#2b6cb0;border-radius:5px;padding:2px 8px;cursor:pointer;font-size:11px">Googleでログイン</button></div>`;
       document.getElementById('btnLoginSettings')?.addEventListener('click', signInWithGoogle);
     } else {
-      fbStatusEl.innerHTML = `<div class="api-status err">未設定　—　下のJSONを入力してください</div>`;
+      fbStatusEl.innerHTML = `<div class="api-status ok">✅ Firebase設定済み（初期設定）</div>`;
     }
   }
 
