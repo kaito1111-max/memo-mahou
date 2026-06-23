@@ -671,7 +671,7 @@ function bindLoginModal() {
     S.view='settings'; S.filter='all'; renderSB(); renderHead(); renderSettings();
   });
   document.getElementById('btnSkipLogin')?.addEventListener('click', () => {
-    sessionStorage.setItem('login_skipped','1');
+    localStorage.setItem('login_skipped','1');
     hideLoginModal();
   });
 }
@@ -686,6 +686,7 @@ const DEFAULT_FB_CFG = {
   measurementId: "G-FD9261QZFP"
 };
 
+let _authResolved = false;
 function initFirebase() {
   const cfg = loadFBConfig() || DEFAULT_FB_CFG;
   if (!cfg || !cfg.projectId) return false;
@@ -697,15 +698,18 @@ function initFirebase() {
     }
     _fbAuth = firebase.auth();
     _fbDb   = firebase.firestore();
-    _fbAuth.onAuthStateChanged(user => {
-      _fbUser = user;
-      renderAuthBar();
-      if (user) {
-        hideLoginModal();
-        loadFromFirestore();
-      } else {
-        if (!sessionStorage.getItem('login_skipped')) showLoginModal();
-      }
+    _fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {
+      _fbAuth.onAuthStateChanged(user => {
+        _fbUser = user;
+        _authResolved = true;
+        renderAuthBar();
+        if (user) {
+          hideLoginModal();
+          loadFromFirestore();
+        } else {
+          if (!localStorage.getItem('login_skipped')) showLoginModal();
+        }
+      });
     });
     return true;
   } catch(e) {
@@ -727,6 +731,7 @@ async function signInWithGoogle() {
 async function signOutFB() {
   if (!_fbAuth) return;
   await _fbAuth.signOut();
+  localStorage.removeItem('login_skipped');
   toast('ログアウトしました');
 }
 
@@ -767,6 +772,7 @@ async function loadFromFirestore() {
       db.settings.apiKey      = savedApiKey;
       db.settings.apiProvider = savedProvider;
       db.settings.ollamaModel = savedOllama;
+      db._ts = db._ts || 0;
       localStorage.setItem(SK, JSON.stringify(db));
       toast('☁️ クラウドから同期しました ✓');
       renderSB(); renderHead(); renderList();
@@ -2476,7 +2482,7 @@ bindLoginModal();
 const _fbInited = initFirebase();
 renderAuthBar();
 renderSB(); renderHead(); renderList();
-if (!_fbInited && !sessionStorage.getItem('login_skipped')) showLoginModal();
+if (!_fbInited && !localStorage.getItem('login_skipped')) showLoginModal();
 </script>
 </body>
 </html>
