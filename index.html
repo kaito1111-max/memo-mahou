@@ -930,7 +930,7 @@ const S = {
   calYear:    new Date().getFullYear(),
   calMonth:   new Date().getMonth(),
   financeTab:   'overview',
-  financeMonth: now().slice(0,7),
+  financeMonth: new Date().toISOString().slice(0,7),
 };
 
 /* ─── UTILS ───────────────────── */
