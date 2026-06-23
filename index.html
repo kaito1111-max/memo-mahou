@@ -530,6 +530,31 @@
     .mini-cal-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--accent); position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); }
     .mini-cal-day.is-today .mini-cal-dot { background: rgba(255,255,255,.75); }
 
+    /* ── GOALS ── */
+    .goals-wrap { max-width: 680px; margin: 0 auto; padding-bottom: 40px; }
+    .goals-horizon { margin-bottom: 28px; }
+    .goals-horizon-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid var(--border); }
+    .goals-horizon-icon { font-size: 22px; }
+    .goals-horizon-label { font-size: 15px; font-weight: 800; color: var(--text); flex: 1; }
+    .goals-horizon-sub { font-size: 11px; color: var(--muted); }
+    .goal-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; box-shadow: var(--shadow); display: flex; align-items: flex-start; gap: 10px; transition: all .14s; }
+    .goal-card:hover { box-shadow: var(--shadow-lg); }
+    .goal-card-left { width: 4px; border-radius: 2px; align-self: stretch; flex-shrink: 0; min-height: 32px; }
+    .goal-card-body { flex: 1; min-width: 0; }
+    .goal-card-text { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.55; }
+    .goal-card-note { font-size: 12px; color: var(--muted); margin-top: 5px; line-height: 1.6; white-space: pre-wrap; }
+    .goal-card-date { font-size: 10.5px; color: var(--border); margin-top: 6px; }
+    .goal-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 5px; border-radius: 4px; flex-shrink: 0; transition: all .12s; }
+    .goal-del:hover { background: #fee2e2; color: #e53e3e; }
+    .goal-add-form { background: var(--bg); border: 1.5px dashed var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; }
+    .goal-add-form textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; resize: none; outline: none; box-sizing: border-box; line-height: 1.6; }
+    .goal-add-form textarea:focus { border-color: var(--accent); }
+    .goal-add-form .note-ta { font-size: 13px; margin-top: 7px; min-height: 60px; color: var(--light); }
+    .goal-add-btns { display: flex; gap: 8px; margin-top: 10px; }
+    .goal-empty { text-align: center; padding: 18px; color: var(--muted); font-size: 12.5px; }
+    .goal-add-trigger { display: flex; align-items: center; gap: 6px; padding: 9px 14px; background: none; border: 1.5px dashed var(--border); border-radius: 9px; font-size: 13px; color: var(--muted); cursor: pointer; width: 100%; font-family: inherit; transition: all .12s; }
+    .goal-add-trigger:hover { border-color: var(--accent); color: var(--accent); background: rgba(233,69,96,.03); }
+
     /* ── FINANCE ── */
     .finance-wrap { max-width: 740px; margin: 0 auto; padding-bottom: 40px; }
     .finance-month-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
@@ -890,6 +915,7 @@ if (!db.analyses)  db.analyses  = {};
 if (!db.todos)     db.todos     = [];
 if (!db.pulses)    db.pulses    = [];
 if (!db.finance)   db.finance   = { taxRate:10, incomeTemplates:[], entries:[] };
+if (!db.goals)     db.goals     = [];
 
 const S = {
   view: 'list',       // 'list'|'edit'|'analysis-home'|'analysis-q'|'settings'|'todos'
@@ -989,6 +1015,74 @@ const PROMPT_ASSIST = `あなたは「メモの魔力」式の自己分析コー
 const PROMPT_CHAT = `あなたは「メモの魔力」式の自己分析コーチです。
 ユーザーの回答に対し、さらに深い自己理解を引き出す鋭い問いかけを1つだけしてください。
 「なぜ？」「そのとき何を感じた？」「それがあなたに何を教えてくれた？」のような深掘り質問を1〜2文で。`;
+
+/* ─── GOALS ───────────────────── */
+const HORIZONS = [
+  { key:'life',   icon:'🌟', label:'人生の夢',    sub:'あなたが死ぬまでに成し遂げたいこと', color:'#d69e2e' },
+  { key:'3year',  icon:'🚀', label:'3年後の目標', sub:'3年後どんな自分になっていたいか',     color:'#e94560' },
+  { key:'1year',  icon:'🎯', label:'1年後の目標', sub:'今年の終わりに達成していること',       color:'#805ad5' },
+  { key:'3month', icon:'⚡', label:'直近3ヶ月',   sub:'今すぐ動ける具体的な目標',             color:'#3182ce' },
+];
+function renderGoals(){
+  const body=document.getElementById('mainBody');
+  body.innerHTML=`<div class="goals-wrap" id="goalsWrap"></div>`;
+  const wrap=document.getElementById('goalsWrap');
+  HORIZONS.forEach(h=>{
+    const goals=(db.goals||[]).filter(g=>g.horizon===h.key);
+    const sec=document.createElement('div');
+    sec.className='goals-horizon'; sec.dataset.h=h.key;
+    sec.innerHTML=`
+      <div class="goals-horizon-head">
+        <span class="goals-horizon-icon">${h.icon}</span>
+        <div><div class="goals-horizon-label">${h.label}</div><div class="goals-horizon-sub">${h.sub}</div></div>
+      </div>
+      <div class="goal-list" id="glist-${h.key}">
+        ${goals.length ? goals.map(g=>goalCardHtml(g,h.color)).join('') : `<div class="goal-empty">まだ設定されていません</div>`}
+      </div>
+      <button class="goal-add-trigger" data-hadd="${h.key}">＋ ${h.label}を追加する</button>`;
+    wrap.appendChild(sec);
+  });
+  wrap.querySelectorAll('[data-hadd]').forEach(btn=>btn.addEventListener('click',()=>showGoalForm(btn.dataset.hadd,btn)));
+  wrap.querySelectorAll('.goal-del').forEach(b=>b.addEventListener('click',()=>deleteGoal(b.dataset.gid)));
+}
+function goalCardHtml(g,color){
+  return `<div class="goal-card">
+    <div class="goal-card-left" style="background:${color}"></div>
+    <div class="goal-card-body">
+      <div class="goal-card-text">${esc(g.text)}</div>
+      ${g.note?`<div class="goal-card-note">${esc(g.note)}</div>`:''}
+      <div class="goal-card-date">${fmtDate(g.createdAt?.slice?.(0,10)||g.createdAt)}</div>
+    </div>
+    <button class="goal-del" data-gid="${g.id}">×</button>
+  </div>`;
+}
+function showGoalForm(horizonKey, triggerBtn){
+  const h=HORIZONS.find(x=>x.key===horizonKey);
+  const form=document.createElement('div');
+  form.className='goal-add-form';
+  form.innerHTML=`
+    <textarea id="gText" placeholder="${h.label}を入力…" rows="2"></textarea>
+    <textarea class="note-ta" id="gNote" placeholder="補足・背景・なぜそれを目指すのか（任意）" rows="2"></textarea>
+    <div class="goal-add-btns">
+      <button class="btn btn-accent" id="btnGSave">保存する</button>
+      <button class="btn btn-ghost" id="btnGCancel">キャンセル</button>
+    </div>`;
+  triggerBtn.replaceWith(form);
+  form.querySelector('#gText').focus();
+  form.querySelector('#btnGSave').addEventListener('click',()=>{
+    const text=form.querySelector('#gText').value.trim();
+    if(!text){toast('目標を入力してください');return;}
+    const note=form.querySelector('#gNote').value.trim();
+    if(!db.goals)db.goals=[];
+    db.goals.push({id:uid(),horizon:horizonKey,text,note,createdAt:now()});
+    persist(db); renderGoals();
+  });
+  form.querySelector('#btnGCancel').addEventListener('click',()=>renderGoals());
+}
+function deleteGoal(id){
+  db.goals=(db.goals||[]).filter(g=>g.id!==id);
+  persist(db); renderGoals();
+}
 
 /* ─── FINANCE ─────────────────── */
 function fmtMoney(n){ return '¥'+(Math.round(n)||0).toLocaleString(); }
@@ -1564,6 +1658,7 @@ function renderSB() {
   html += `<div class="nav-divider"></div>`;
   html += `<div class="nav-section">行動管理</div>`;
   const pendingTodos = (db.todos||[]).filter(t=>t.status!=='done').length;
+  html += navI('goals','🌟','夢・目標', (db.goals||[]).length||null);
   html += navI('todos','📋','転用ToDo', pendingTodos||null);
   html += navI('align','📊','整合マップ', null);
   html += navI('finance','💴','収支管理', null);
@@ -1629,6 +1724,10 @@ function renderHead() {
     R.innerHTML='';
   } else if (S.view === 'settings') {
     L.innerHTML=`<div><div class="head-title">⚙️ AI設定</div></div>`;
+    R.innerHTML='';
+  } else if (S.view === 'goals') {
+    const gc2=(db.goals||[]).length;
+    L.innerHTML=`<div><div class="head-title">🌟 夢・目標</div><div class="head-sub">${gc2}件設定中</div></div>`;
     R.innerHTML='';
   } else if (S.view === 'finance') {
     L.innerHTML=`<div><div class="head-title">💴 収支管理</div><div class="head-sub">収入・支出・AIレポート</div></div>`;
@@ -2388,6 +2487,7 @@ document.getElementById('sbNav').addEventListener('click', e => {
   if (key === '__genre__')  { openGenreModal(); return; }
   if (key === 'todos')      { S.view='todos';          S.filter='all'; renderSB(); renderHead(); renderTodos(); return; }
   if (key === 'align')      { S.view='align';          S.filter='all'; renderSB(); renderHead(); renderAlignmentMap(); return; }
+  if (key === 'goals')      { S.view='goals';           S.filter='all'; renderSB(); renderHead(); renderGoals(); return; }
   if (key === 'finance')    { S.view='finance';        S.filter='all'; renderSB(); renderHead(); renderFinance(); return; }
   if (key === 'analysis')   { S.view='analysis-home'; S.filter='all'; renderSB(); renderHead(); renderAnalysisHome(); return; }
   if (key === 'settings')   { S.view='settings';      S.filter='all'; renderSB(); renderHead(); renderSettings(); return; }
