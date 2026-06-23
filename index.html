@@ -530,6 +530,59 @@
     .mini-cal-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--accent); position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); }
     .mini-cal-day.is-today .mini-cal-dot { background: rgba(255,255,255,.75); }
 
+    /* ── FINANCE ── */
+    .finance-wrap { max-width: 740px; margin: 0 auto; padding-bottom: 40px; }
+    .finance-month-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .finance-month-label { font-size: 15px; font-weight: 700; flex: 1; text-align: center; }
+    .finance-tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 18px; gap: 0; }
+    .finance-tab { padding: 9px 20px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .12s; }
+    .finance-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .fin-kpi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 18px; }
+    .fin-kpi { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; box-shadow: var(--shadow); text-align: center; }
+    .fin-kpi-label { font-size: 10px; color: var(--muted); font-weight: 700; letter-spacing: .5px; margin-bottom: 5px; text-transform: uppercase; }
+    .fin-kpi-val { font-size: 19px; font-weight: 800; line-height: 1.2; }
+    .fin-kpi-val.green { color: #38a169; }
+    .fin-kpi-val.red { color: #e53e3e; }
+    .fin-kpi-val.blue { color: #3182ce; }
+    .fin-kpi-sub { font-size: 10px; color: var(--muted); margin-top: 3px; }
+    .fin-sec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; margin-top: 6px; }
+    .fin-sec-title { font-size: 13px; font-weight: 700; color: var(--text); }
+    .fin-entry { background: var(--white); border: 1px solid var(--border); border-radius: 9px; padding: 11px 14px; margin-bottom: 7px; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow); }
+    .fin-entry-main { flex: 1; min-width: 0; }
+    .fin-entry-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .fin-entry-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .fin-amount { font-size: 15px; font-weight: 700; flex-shrink: 0; }
+    .fin-amount.income { color: #38a169; }
+    .fin-amount.expense { color: #e53e3e; }
+    .fin-tag { font-size: 10px; padding: 2px 7px; border-radius: 9px; font-weight: 600; flex-shrink: 0; white-space: nowrap; }
+    .fin-tag.fixed { background: #ebf8ff; color: #2b6cb0; }
+    .fin-tag.variable { background: #f0fff4; color: #276749; }
+    .fin-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 4px; transition: all .12s; }
+    .fin-del:hover { background: #fee2e2; color: #e53e3e; }
+    .fin-empty { text-align: center; padding: 20px; color: var(--muted); font-size: 12.5px; border: 1.5px dashed var(--border); border-radius: 9px; margin-bottom: 8px; }
+    .fin-tmpl-section { background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 10px 14px; margin-bottom: 14px; }
+    .fin-tmpl-label { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: .5px; margin-bottom: 7px; text-transform: uppercase; }
+    .fin-tmpl-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .fin-tmpl-chip { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 4px 12px; font-size: 11.5px; cursor: pointer; transition: all .12s; display: flex; align-items: center; gap: 5px; }
+    .fin-tmpl-chip:hover { border-color: var(--accent); color: var(--accent); }
+    .fin-tmpl-del { color: var(--muted); font-size: 13px; cursor: pointer; }
+    .fin-tmpl-del:hover { color: #e53e3e; }
+    .fin-report-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-top: 14px; box-shadow: var(--shadow); }
+    .fin-report-body { font-size: 13.5px; line-height: 1.85; color: var(--light); white-space: pre-wrap; }
+    .fin-modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.42); z-index: 400; display: none; align-items: flex-end; justify-content: center; }
+    .fin-modal-bg.open { display: flex; }
+    .fin-modal { background: #fff; border-radius: 18px 18px 0 0; padding: 22px 20px 36px; width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto; }
+    .fin-modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+    .fin-field { margin-bottom: 13px; }
+    .fin-field label { font-size: 11.5px; font-weight: 600; color: var(--muted); display: block; margin-bottom: 5px; }
+    .fin-field input, .fin-field select { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; box-sizing: border-box; }
+    .fin-field input:focus, .fin-field select:focus { border-color: var(--accent); }
+    .fin-type-toggle { display: flex; gap: 7px; }
+    .fin-type-btn { flex: 1; padding: 8px; border: 1.5px solid var(--border); border-radius: 8px; background: none; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all .12s; font-family: inherit; }
+    .fin-type-btn.sel { border-color: var(--accent); background: rgba(233,69,96,.07); color: var(--accent); }
+    .fin-preview { background: var(--bg); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; color: var(--light); margin-bottom: 13px; line-height: 1.6; }
+    @media(max-width:640px) { .fin-kpi-grid { grid-template-columns: 1fr 1fr; } .fin-kpi-grid .fin-kpi:last-child { grid-column: span 2; } }
+
     /* ── READ-ONLY MEMO VIEW ── */
     .memo-view { max-width: 860px; margin: 0 auto; padding: 4px 0 40px; }
     .memo-view-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
@@ -630,6 +683,10 @@
 </div>
 
 <!-- ── GENRE MODAL ── -->
+<div class="fin-modal-bg" id="finModal">
+  <div class="fin-modal" id="finModalContent"></div>
+</div>
+
 <div class="modal-bg" id="genreModal">
   <div class="modal-box">
     <h3>ジャンルを追加</h3>
@@ -832,6 +889,7 @@ if (!db.questions) db.questions = [];
 if (!db.analyses)  db.analyses  = {};
 if (!db.todos)     db.todos     = [];
 if (!db.pulses)    db.pulses    = [];
+if (!db.finance)   db.finance   = { taxRate:10, incomeTemplates:[], entries:[] };
 
 const S = {
   view: 'list',       // 'list'|'edit'|'analysis-home'|'analysis-q'|'settings'|'todos'
@@ -843,8 +901,10 @@ const S = {
   chatHistory: [],
   aiLoading: false,
   todoFilter: 'pending',
-  calYear:  new Date().getFullYear(),
-  calMonth: new Date().getMonth(),
+  calYear:    new Date().getFullYear(),
+  calMonth:   new Date().getMonth(),
+  financeTab:   'overview',
+  financeMonth: now().slice(0,7),
 };
 
 /* ─── UTILS ───────────────────── */
@@ -929,6 +989,262 @@ const PROMPT_ASSIST = `あなたは「メモの魔力」式の自己分析コー
 const PROMPT_CHAT = `あなたは「メモの魔力」式の自己分析コーチです。
 ユーザーの回答に対し、さらに深い自己理解を引き出す鋭い問いかけを1つだけしてください。
 「なぜ？」「そのとき何を感じた？」「それがあなたに何を教えてくれた？」のような深掘り質問を1〜2文で。`;
+
+/* ─── FINANCE ─────────────────── */
+function fmtMoney(n){ return '¥'+(Math.round(n)||0).toLocaleString(); }
+function netIncome(e){
+  const gross = e.sourceType!=='other' ? (e.hourlyRate||0)*(e.hours||0) : (e.grossAmount||0);
+  return Math.round(gross*(1-(e.taxRate??db.finance?.taxRate??10)/100));
+}
+function getMonthData(mo){
+  const ent=(db.finance?.entries||[]).filter(e=>e.month===mo);
+  const incomes=ent.filter(e=>e.kind==='income');
+  const expenses=ent.filter(e=>e.kind==='expense');
+  const totalNet=incomes.reduce((s,e)=>s+netIncome(e),0);
+  const totalFixed=expenses.filter(e=>e.tag==='fixed').reduce((s,e)=>s+(e.amount||0),0);
+  const totalVariable=expenses.filter(e=>e.tag==='variable').reduce((s,e)=>s+(e.amount||0),0);
+  return {incomes,expenses,totalNet,totalFixed,totalVariable,totalExpenses:totalFixed+totalVariable,balance:totalNet-totalFixed-totalVariable};
+}
+function adjMonth(mo,delta){
+  const [y,m]=mo.split('-').map(Number);
+  const d=new Date(y,m-1+delta,1);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+function renderFinance(){
+  const body=document.getElementById('mainBody');
+  const mo=S.financeMonth, tab=S.financeTab;
+  const [y,m]=mo.split('-');
+  const data=getMonthData(mo);
+  body.innerHTML=`
+    <div class="finance-wrap">
+      <div class="finance-month-nav">
+        <button class="mini-cal-nav" id="finPrev">‹</button>
+        <span class="finance-month-label">${y}年${Number(m)}月</span>
+        <button class="mini-cal-nav" id="finNext">›</button>
+      </div>
+      <div class="finance-tabs">
+        <div class="finance-tab${tab==='overview'?' active':''}" data-ft="overview">📊 概要</div>
+        <div class="finance-tab${tab==='income'?' active':''}" data-ft="income">💰 収入</div>
+        <div class="finance-tab${tab==='expense'?' active':''}" data-ft="expense">💸 支出</div>
+      </div>
+      <div id="finBody"></div>
+    </div>`;
+  document.getElementById('finPrev').addEventListener('click',()=>{S.financeMonth=adjMonth(mo,-1);renderFinance();});
+  document.getElementById('finNext').addEventListener('click',()=>{S.financeMonth=adjMonth(mo,1);renderFinance();});
+  document.querySelectorAll('.finance-tab').forEach(t=>t.addEventListener('click',()=>{S.financeTab=t.dataset.ft;renderFinance();}));
+  if(tab==='overview')  renderFinOverview(data,mo);
+  else if(tab==='income')  renderFinIncome(data.incomes,mo);
+  else if(tab==='expense') renderFinExpense(data.expenses,mo);
+}
+function renderFinOverview(data,mo){
+  const tb=document.getElementById('finBody');
+  const balCls=data.balance>=0?'green':'red';
+  tb.innerHTML=`
+    <div class="fin-kpi-grid">
+      <div class="fin-kpi"><div class="fin-kpi-label">手取り収入</div><div class="fin-kpi-val green">${fmtMoney(data.totalNet)}</div></div>
+      <div class="fin-kpi"><div class="fin-kpi-label">支出合計</div><div class="fin-kpi-val red">${fmtMoney(data.totalExpenses)}</div><div class="fin-kpi-sub">固定 ${fmtMoney(data.totalFixed)} / 変動 ${fmtMoney(data.totalVariable)}</div></div>
+      <div class="fin-kpi"><div class="fin-kpi-label">収支バランス</div><div class="fin-kpi-val ${balCls}">${fmtMoney(data.balance)}</div></div>
+    </div>
+    <div class="fin-sec-head">
+      <span class="fin-sec-title">📝 月次レポート</span>
+      <button class="btn btn-primary" id="btnGenReport" style="font-size:12px;padding:6px 14px">AIで生成</button>
+    </div>
+    <div id="finReportArea"><div class="fin-empty">「AIで生成」を押すと事実・ポジティブ点・改善点・来月のアクションをまとめます</div></div>`;
+  document.getElementById('btnGenReport').addEventListener('click',()=>generateFinReport(data,mo));
+}
+function renderFinIncome(incomes,mo){
+  const tb=document.getElementById('finBody');
+  const templates=db.finance?.incomeTemplates||[];
+  const tmplHtml=templates.length?`<div class="fin-tmpl-section">
+    <div class="fin-tmpl-label">テンプレートから追加</div>
+    <div class="fin-tmpl-list">${templates.map(t=>`
+      <div class="fin-tmpl-chip" data-tid="${t.id}">
+        ${esc(t.name)}<span style="font-size:10px;color:var(--muted)"> ${fmtMoney(t.hourlyRate)}/h</span>
+        <span class="fin-tmpl-del" data-deltmpl="${t.id}">×</span>
+      </div>`).join('')}
+    </div>
+  </div>`:'';
+  const listHtml=incomes.length?incomes.map(e=>{
+    const gross=e.sourceType!=='other'?(e.hourlyRate||0)*(e.hours||0):(e.grossAmount||0);
+    const sub=e.sourceType!=='other'?`${fmtMoney(e.hourlyRate)}/h × ${e.hours}h = 税前${fmtMoney(gross)}`:`税前${fmtMoney(gross)}`;
+    return `<div class="fin-entry">
+      <div class="fin-entry-main"><div class="fin-entry-name">${esc(e.name)}</div><div class="fin-entry-sub">${sub}　税${e.taxRate??10}%</div></div>
+      <div class="fin-amount income">${fmtMoney(netIncome(e))}</div>
+      <button class="fin-del" data-del="${e.id}">×</button>
+    </div>`;
+  }).join(''):`<div class="fin-empty">収入がありません</div>`;
+  tb.innerHTML=`${tmplHtml}
+    <div class="fin-sec-head"><span class="fin-sec-title">収入一覧</span><button class="btn btn-accent" id="btnAddIncome" style="font-size:12px;padding:6px 14px">＋ 収入を追加</button></div>
+    ${listHtml}`;
+  document.getElementById('btnAddIncome').addEventListener('click',()=>openFinModal('income',mo));
+  tb.querySelectorAll('.fin-del').forEach(b=>b.addEventListener('click',()=>deleteFinEntry(b.dataset.del)));
+  tb.querySelectorAll('.fin-tmpl-chip').forEach(c=>c.addEventListener('click',e=>{if(!e.target.dataset.deltmpl)openFinModal('income',mo,c.dataset.tid);}));
+  tb.querySelectorAll('.fin-tmpl-del').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();deleteFinTemplate(b.dataset.deltmpl);}));
+}
+function renderFinExpense(expenses,mo){
+  const tb=document.getElementById('finBody');
+  const fixed=expenses.filter(e=>e.tag==='fixed');
+  const variable=expenses.filter(e=>e.tag==='variable');
+  function row(e){return `<div class="fin-entry">
+    <div class="fin-entry-main"><div class="fin-entry-name">${esc(e.name)}</div><div class="fin-entry-sub">${e.date}</div></div>
+    <span class="fin-tag ${e.tag}">${e.tag==='fixed'?'固定費':'変動費'}</span>
+    <div class="fin-amount expense">${fmtMoney(e.amount)}</div>
+    <button class="fin-del" data-del="${e.id}">×</button>
+  </div>`;}
+  tb.innerHTML=`
+    <div class="fin-sec-head"><span class="fin-sec-title">💳 固定費 <small style="font-weight:400;color:var(--muted)">${fmtMoney(fixed.reduce((s,e)=>s+e.amount,0))}</small></span><button class="btn btn-ghost" id="btnAddFixed" style="font-size:12px;padding:6px 14px">＋ 固定費を追加</button></div>
+    ${fixed.length?fixed.map(row).join(''):'<div class="fin-empty">固定費がありません</div>'}
+    <div class="fin-sec-head" style="margin-top:18px"><span class="fin-sec-title">🛒 変動費 <small style="font-weight:400;color:var(--muted)">${fmtMoney(variable.reduce((s,e)=>s+e.amount,0))}</small></span><button class="btn btn-ghost" id="btnAddVariable" style="font-size:12px;padding:6px 14px">＋ 変動費を追加</button></div>
+    ${variable.length?variable.map(row).join(''):'<div class="fin-empty">変動費がありません</div>'}`;
+  document.getElementById('btnAddFixed').addEventListener('click',()=>openFinModal('expense',mo,null,'fixed'));
+  document.getElementById('btnAddVariable').addEventListener('click',()=>openFinModal('expense',mo,null,'variable'));
+  tb.querySelectorAll('.fin-del').forEach(b=>b.addEventListener('click',()=>deleteFinEntry(b.dataset.del)));
+}
+function openFinModal(kind,mo,templateId,expTag){
+  const modal=document.getElementById('finModal');
+  const content=document.getElementById('finModalContent');
+  const tmpl=templateId?(db.finance?.incomeTemplates||[]).find(t=>t.id===templateId):null;
+  if(kind==='income'){
+    let cType=tmpl?.type||'dispatch';
+    content.innerHTML=`
+      <h3>💰 収入を追加</h3>
+      <div class="fin-field"><label>収入源の名前</label><input id="fInName" type="text" value="${esc(tmpl?.name||'')}" placeholder="例：○○派遣 6月"></div>
+      <div class="fin-field"><label>種別</label><div class="fin-type-toggle">
+        <button class="fin-type-btn${cType==='dispatch'?' sel':''}" data-t="dispatch">派遣</button>
+        <button class="fin-type-btn${cType==='part-time'?' sel':''}" data-t="part-time">バイト</button>
+        <button class="fin-type-btn${cType==='other'?' sel':''}" data-t="other">その他</button>
+      </div></div>
+      <div id="finHourly">
+        <div class="fin-field"><label>時給（円）</label><input id="fRate" type="number" value="${tmpl?.hourlyRate||''}" placeholder="1200"></div>
+        <div class="fin-field"><label>勤務時間（h）</label><input id="fHours" type="number" value="${tmpl?.defaultHours||''}" placeholder="160"></div>
+      </div>
+      <div id="finDirect" style="display:none">
+        <div class="fin-field"><label>金額・税引前（円）</label><input id="fGross" type="number" placeholder="200000"></div>
+      </div>
+      <div class="fin-preview" id="finPreview">計算結果がここに表示されます</div>
+      <div class="fin-field"><label>所得税率（%）</label><input id="fTax" type="number" value="${db.finance?.taxRate||10}" placeholder="10"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+        <button class="btn btn-accent" id="btnFinOk">追加する</button>
+        <button class="btn btn-ghost" id="btnFinSaveTmpl">テンプレート保存</button>
+        <button class="btn btn-ghost" id="btnFinCancel">キャンセル</button>
+      </div>`;
+    function updatePreview(){
+      const tax=+(document.getElementById('fTax')?.value)||10;
+      let gross=0;
+      if(cType!=='other'){gross=(+(document.getElementById('fRate')?.value)||0)*(+(document.getElementById('fHours')?.value)||0);}
+      else{gross=+(document.getElementById('fGross')?.value)||0;}
+      const net=Math.round(gross*(1-tax/100));
+      document.getElementById('finPreview').innerHTML=`税引前 <strong>${fmtMoney(gross)}</strong>　→　手取り <strong style="color:#38a169">${fmtMoney(net)}</strong>（${tax}%控除）`;
+    }
+    function setType(t){
+      cType=t;
+      content.querySelectorAll('.fin-type-btn').forEach(b=>b.classList.toggle('sel',b.dataset.t===t));
+      document.getElementById('finHourly').style.display=t==='other'?'none':'';
+      document.getElementById('finDirect').style.display=t==='other'?'':'none';
+      updatePreview();
+    }
+    content.querySelectorAll('.fin-type-btn').forEach(b=>b.addEventListener('click',()=>setType(b.dataset.t)));
+    content.querySelectorAll('input').forEach(i=>i.addEventListener('input',updatePreview));
+    setType(cType);
+    document.getElementById('btnFinOk').addEventListener('click',()=>{
+      const name=document.getElementById('fInName').value.trim();
+      if(!name){toast('名前を入力してください');return;}
+      const tax=+(document.getElementById('fTax').value)||10;
+      const entry={id:uid(),kind:'income',name,sourceType:cType,taxRate:tax,date:now(),month:mo};
+      if(cType!=='other'){entry.hourlyRate=+(document.getElementById('fRate').value)||0;entry.hours=+(document.getElementById('fHours').value)||0;}
+      else{entry.grossAmount=+(document.getElementById('fGross').value)||0;}
+      if(!db.finance)db.finance={taxRate:10,incomeTemplates:[],entries:[]};
+      db.finance.entries.push(entry);
+      persist(db);closeFinModal();S.financeTab='income';renderFinance();
+    });
+    document.getElementById('btnFinSaveTmpl').addEventListener('click',()=>{
+      const name=document.getElementById('fInName').value.trim();
+      if(!name){toast('名前を入力してください');return;}
+      if(cType==='other'){toast('テンプレートは派遣・バイトのみ対応です');return;}
+      if(!db.finance.incomeTemplates)db.finance.incomeTemplates=[];
+      db.finance.incomeTemplates.push({id:uid(),name,type:cType,hourlyRate:+(document.getElementById('fRate').value)||0,defaultHours:+(document.getElementById('fHours').value)||0});
+      persist(db);toast('テンプレートに保存しました ✓');
+    });
+    document.getElementById('btnFinCancel').addEventListener('click',closeFinModal);
+  } else {
+    let eTag=expTag||'fixed';
+    content.innerHTML=`
+      <h3>💸 支出を追加</h3>
+      <div class="fin-field"><label>項目名</label><input id="fExpName" type="text" placeholder="例：家賃・食費・交通費"></div>
+      <div class="fin-field"><label>金額（円）</label><input id="fExpAmt" type="number" placeholder="50000"></div>
+      <div class="fin-field"><label>種別</label><div class="fin-type-toggle">
+        <button class="fin-type-btn${eTag==='fixed'?' sel':''}" data-t="fixed">固定費</button>
+        <button class="fin-type-btn${eTag==='variable'?' sel':''}" data-t="variable">変動費</button>
+      </div></div>
+      <div class="fin-field"><label>日付</label><input id="fExpDate" type="date" value="${now()}"></div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-accent" id="btnFinOk">追加する</button>
+        <button class="btn btn-ghost" id="btnFinCancel">キャンセル</button>
+      </div>`;
+    content.querySelectorAll('.fin-type-btn').forEach(b=>b.addEventListener('click',()=>{
+      eTag=b.dataset.t;content.querySelectorAll('.fin-type-btn').forEach(x=>x.classList.toggle('sel',x.dataset.t===eTag));
+    }));
+    document.getElementById('btnFinOk').addEventListener('click',()=>{
+      const name=document.getElementById('fExpName').value.trim();
+      const amount=+(document.getElementById('fExpAmt').value)||0;
+      const date=document.getElementById('fExpDate').value||now();
+      if(!name){toast('項目名を入力してください');return;}
+      if(!amount){toast('金額を入力してください');return;}
+      if(!db.finance)db.finance={taxRate:10,incomeTemplates:[],entries:[]};
+      db.finance.entries.push({id:uid(),kind:'expense',name,tag:eTag,amount,date,month:mo});
+      persist(db);closeFinModal();S.financeTab='expense';renderFinance();
+    });
+    document.getElementById('btnFinCancel').addEventListener('click',closeFinModal);
+  }
+  modal.classList.add('open');
+}
+function closeFinModal(){document.getElementById('finModal').classList.remove('open');}
+function deleteFinEntry(id){
+  if(!db.finance)return;
+  db.finance.entries=db.finance.entries.filter(e=>e.id!==id);
+  persist(db);renderFinance();
+}
+function deleteFinTemplate(id){
+  if(!db.finance?.incomeTemplates)return;
+  db.finance.incomeTemplates=db.finance.incomeTemplates.filter(t=>t.id!==id);
+  persist(db);renderFinance();
+}
+async function generateFinReport(data,mo){
+  const area=document.getElementById('finReportArea');
+  if(!area)return;
+  area.innerHTML=`<div class="fin-report-card" style="color:var(--muted);display:flex;gap:10px;align-items:center">🤖 AIがレポートを生成中…</div>`;
+  const [y,m]=mo.split('-');
+  const incLines=data.incomes.map(e=>{
+    const gross=e.sourceType!=='other'?(e.hourlyRate||0)*(e.hours||0):(e.grossAmount||0);
+    return `- ${e.name}：手取り${fmtMoney(netIncome(e))}（税前${fmtMoney(gross)}）`;
+  }).join('\n');
+  const fixLines=data.expenses.filter(e=>e.tag==='fixed').map(e=>`- ${e.name}：${fmtMoney(e.amount)}`).join('\n');
+  const varLines=data.expenses.filter(e=>e.tag==='variable').map(e=>`- ${e.name}：${fmtMoney(e.amount)}`).join('\n');
+  const goals=(db.goals||[]).map(g=>`- ${g.text}`).join('\n');
+  const prompt=`あなたは個人の人生を発展させるための厳しくも誠実なコーチです。${y}年${m}月の収支データを元に、率直なレポートを書いてください。
+
+【収入（手取り合計：${fmtMoney(data.totalNet)}）】
+${incLines||'記録なし'}
+
+【固定費（合計：${fmtMoney(data.totalFixed)}）】
+${fixLines||'記録なし'}
+
+【変動費（合計：${fmtMoney(data.totalVariable)}）】
+${varLines||'記録なし'}
+
+【収支バランス：${fmtMoney(data.balance)}】
+${goals?`\n【直近の目標】\n${goals}`:''}
+
+以下の構成で書いてください：
+📌 事実（数字の整理・1〜2行）
+✅ ポジティブな点（2点・具体的に）
+⚠️ 改善が必要な点（2〜3点・厳しく・数字を使って）
+🎯 来月に向けての具体的アクション（3点・実行可能な行動レベルで）`;
+  const result=await callAI([{role:'user',content:prompt}],null);
+  if(result){area.innerHTML=`<div class="fin-report-card"><div class="fin-report-body">${esc(result)}</div></div>`;}
+  else{area.innerHTML=`<div class="fin-report-card" style="color:var(--muted)">生成に失敗しました。AI設定を確認してください。</div>`;}
+}
+document.getElementById('finModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeFinModal();});
 
 /* ─── ALIGNMENT MAP ───────────── */
 function pulseScore(vals) {
@@ -1250,6 +1566,7 @@ function renderSB() {
   const pendingTodos = (db.todos||[]).filter(t=>t.status!=='done').length;
   html += navI('todos','📋','転用ToDo', pendingTodos||null);
   html += navI('align','📊','整合マップ', null);
+  html += navI('finance','💴','収支管理', null);
   html += `<div class="nav-divider"></div>`;
   html += `<div class="nav-section">AI機能</div>`;
   html += navI('analysis','🔍','自己分析モード', total ? `${answered}/${total}` : null);
@@ -1312,6 +1629,9 @@ function renderHead() {
     R.innerHTML='';
   } else if (S.view === 'settings') {
     L.innerHTML=`<div><div class="head-title">⚙️ AI設定</div></div>`;
+    R.innerHTML='';
+  } else if (S.view === 'finance') {
+    L.innerHTML=`<div><div class="head-title">💴 収支管理</div><div class="head-sub">収入・支出・AIレポート</div></div>`;
     R.innerHTML='';
   } else if (S.view === 'align') {
     L.innerHTML=`<div><div class="head-title">📊 整合マップ</div><div class="head-sub">行動の質を可視化</div></div>`;
@@ -2068,6 +2388,7 @@ document.getElementById('sbNav').addEventListener('click', e => {
   if (key === '__genre__')  { openGenreModal(); return; }
   if (key === 'todos')      { S.view='todos';          S.filter='all'; renderSB(); renderHead(); renderTodos(); return; }
   if (key === 'align')      { S.view='align';          S.filter='all'; renderSB(); renderHead(); renderAlignmentMap(); return; }
+  if (key === 'finance')    { S.view='finance';        S.filter='all'; renderSB(); renderHead(); renderFinance(); return; }
   if (key === 'analysis')   { S.view='analysis-home'; S.filter='all'; renderSB(); renderHead(); renderAnalysisHome(); return; }
   if (key === 'settings')   { S.view='settings';      S.filter='all'; renderSB(); renderHead(); renderSettings(); return; }
   S.filter=key; S.search=''; document.getElementById('searchInput').value='';
