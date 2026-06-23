@@ -531,29 +531,39 @@
     .mini-cal-day.is-today .mini-cal-dot { background: rgba(255,255,255,.75); }
 
     /* ── GOALS ── */
-    .goals-wrap { max-width: 680px; margin: 0 auto; padding-bottom: 40px; }
-    .goals-horizon { margin-bottom: 28px; }
-    .goals-horizon-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid var(--border); }
-    .goals-horizon-icon { font-size: 22px; }
-    .goals-horizon-label { font-size: 15px; font-weight: 800; color: var(--text); flex: 1; }
-    .goals-horizon-sub { font-size: 11px; color: var(--muted); }
-    .goal-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; box-shadow: var(--shadow); display: flex; align-items: flex-start; gap: 10px; transition: all .14s; }
-    .goal-card:hover { box-shadow: var(--shadow-lg); }
-    .goal-card-left { width: 4px; border-radius: 2px; align-self: stretch; flex-shrink: 0; min-height: 32px; }
-    .goal-card-body { flex: 1; min-width: 0; }
-    .goal-card-text { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.55; }
-    .goal-card-note { font-size: 12px; color: var(--muted); margin-top: 5px; line-height: 1.6; white-space: pre-wrap; }
-    .goal-card-date { font-size: 10.5px; color: var(--border); margin-top: 6px; }
-    .goal-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 5px; border-radius: 4px; flex-shrink: 0; transition: all .12s; }
+    .goals-wrap { max-width: 700px; margin: 0 auto; padding-bottom: 60px; }
+    .goals-hero { text-align: center; padding: 32px 20px 28px; margin-bottom: 8px; }
+    .goals-hero-title { font-size: 26px; font-weight: 900; background: linear-gradient(135deg,#f6d365,#fda085,#e94560); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 8px; }
+    .goals-hero-sub { font-size: 14px; color: var(--muted); line-height: 1.7; }
+    .goals-horizon { margin-bottom: 10px; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-lg); }
+    .goals-horizon-banner { padding: 20px 22px 16px; position: relative; overflow: hidden; cursor: pointer; }
+    .goals-horizon-banner::before { content:''; position:absolute; inset:0; opacity:.12; background: radial-gradient(circle at 80% 50%, #fff 0%, transparent 70%); }
+    .goals-horizon-top { display: flex; align-items: center; gap: 14px; }
+    .goals-horizon-icon { font-size: 32px; line-height: 1; }
+    .goals-horizon-info { flex: 1; }
+    .goals-horizon-label { font-size: 17px; font-weight: 900; color: #fff; letter-spacing: -.2px; }
+    .goals-horizon-sub { font-size: 12px; color: rgba(255,255,255,.75); margin-top: 2px; }
+    .goals-horizon-count { font-size: 12px; font-weight: 700; background: rgba(255,255,255,.2); color: #fff; padding: 3px 10px; border-radius: 12px; }
+    .goals-horizon-body { background: var(--white); padding: 16px 18px 4px; }
+    .goal-card { border-radius: 12px; padding: 16px 18px; margin-bottom: 10px; position: relative; transition: transform .15s, box-shadow .15s; cursor: default; }
+    .goal-card:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,.1); }
+    .goal-card-num { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 7px; opacity: .6; }
+    .goal-card-text { font-size: 16px; font-weight: 800; line-height: 1.5; color: var(--text); margin-bottom: 4px; }
+    .goal-card-note { font-size: 13px; color: var(--light); line-height: 1.7; white-space: pre-wrap; margin-top: 6px; padding-top: 8px; border-top: 1px solid rgba(0,0,0,.06); }
+    .goal-card-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+    .goal-card-date { font-size: 10.5px; color: var(--muted); }
+    .goal-del { background: none; border: none; color: rgba(0,0,0,.2); cursor: pointer; font-size: 16px; padding: 3px 7px; border-radius: 6px; transition: all .12s; }
     .goal-del:hover { background: #fee2e2; color: #e53e3e; }
-    .goal-add-form { background: var(--bg); border: 1.5px dashed var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; }
-    .goal-add-form textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; resize: none; outline: none; box-sizing: border-box; line-height: 1.6; }
-    .goal-add-form textarea:focus { border-color: var(--accent); }
-    .goal-add-form .note-ta { font-size: 13px; margin-top: 7px; min-height: 60px; color: var(--light); }
-    .goal-add-btns { display: flex; gap: 8px; margin-top: 10px; }
-    .goal-empty { text-align: center; padding: 18px; color: var(--muted); font-size: 12.5px; }
-    .goal-add-trigger { display: flex; align-items: center; gap: 6px; padding: 9px 14px; background: none; border: 1.5px dashed var(--border); border-radius: 9px; font-size: 13px; color: var(--muted); cursor: pointer; width: 100%; font-family: inherit; transition: all .12s; }
-    .goal-add-trigger:hover { border-color: var(--accent); color: var(--accent); background: rgba(233,69,96,.03); }
+    .goal-empty { text-align: center; padding: 24px 16px; color: var(--muted); }
+    .goal-empty-icon { font-size: 28px; margin-bottom: 8px; }
+    .goal-empty-text { font-size: 13px; line-height: 1.7; }
+    .goal-add-trigger { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 13px; background: var(--bg); border: 2px dashed var(--border); border-radius: 0 0 16px 16px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; width: 100%; font-family: inherit; transition: all .12s; }
+    .goal-add-trigger:hover { border-color: var(--accent); color: var(--accent); background: rgba(233,69,96,.04); }
+    .goal-add-form { padding: 16px 18px; background: var(--bg); border-radius: 0 0 16px 16px; border-top: 2px dashed var(--border); }
+    .goal-add-form textarea { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; font-weight: 600; font-family: inherit; resize: none; outline: none; box-sizing: border-box; line-height: 1.6; background: #fff; transition: border-color .15s; }
+    .goal-add-form textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(233,69,96,.08); }
+    .goal-add-form .note-ta { font-size: 13.5px; font-weight: 400; margin-top: 8px; min-height: 64px; color: var(--light); }
+    .goal-add-btns { display: flex; gap: 8px; margin-top: 12px; }
 
     /* ── FINANCE ── */
     .finance-wrap { max-width: 740px; margin: 0 auto; padding-bottom: 40px; }
@@ -1025,46 +1035,73 @@ const HORIZONS = [
 ];
 function renderGoals(){
   const body=document.getElementById('mainBody');
-  body.innerHTML=`<div class="goals-wrap" id="goalsWrap"></div>`;
-  const wrap=document.getElementById('goalsWrap');
+  const EMPTY_MSGS={
+    life:   {icon:'🌙',text:'死ぬまでに何を成し遂げたいか。\nまだ何も書かれていない。'},
+    '3year':{icon:'🔥',text:'3年後の自分は何者か。\n今こそ決める時。'},
+    '1year':{icon:'💡',text:'今年終わりに何を達成しているか。\n具体的に書いてみよう。'},
+    '3month':{icon:'⚡',text:'今週から動ける目標は？\n小さな一歩が人生を変える。'},
+  };
+  const GRADS={
+    life:   'linear-gradient(135deg,#f6d365 0%,#d69e2e 100%)',
+    '3year':'linear-gradient(135deg,#ff6b9d 0%,#e94560 100%)',
+    '1year':'linear-gradient(135deg,#b794f4 0%,#805ad5 100%)',
+    '3month':'linear-gradient(135deg,#63b3ed 0%,#3182ce 100%)',
+  };
+  const CARD_BG={
+    life:   'rgba(214,158,46,.08)',
+    '3year':'rgba(233,69,96,.07)',
+    '1year':'rgba(128,90,213,.07)',
+    '3month':'rgba(49,130,206,.07)',
+  };
+  let html=`<div class="goals-wrap">
+    <div class="goals-hero">
+      <div class="goals-hero-title">夢と目標</div>
+      <div class="goals-hero-sub">あなたの人生を作るのは、毎日の選択です。<br>ここに書いた言葉が、24時間を動かす羅針盤になる。</div>
+    </div>`;
   HORIZONS.forEach(h=>{
     const goals=(db.goals||[]).filter(g=>g.horizon===h.key);
-    const sec=document.createElement('div');
-    sec.className='goals-horizon'; sec.dataset.h=h.key;
-    sec.innerHTML=`
-      <div class="goals-horizon-head">
-        <span class="goals-horizon-icon">${h.icon}</span>
-        <div><div class="goals-horizon-label">${h.label}</div><div class="goals-horizon-sub">${h.sub}</div></div>
+    const em=EMPTY_MSGS[h.key];
+    const cardsHtml=goals.length
+      ? goals.map((g,i)=>`
+        <div class="goal-card" style="background:${CARD_BG[h.key]}">
+          <div class="goal-card-num" style="color:${h.color}">#${String(i+1).padStart(2,'0')}</div>
+          <div class="goal-card-text">${esc(g.text)}</div>
+          ${g.note?`<div class="goal-card-note">${esc(g.note)}</div>`:''}
+          <div class="goal-card-foot">
+            <span class="goal-card-date">${fmtDate(g.createdAt?.slice?.(0,10)||g.createdAt)} 設定</span>
+            <button class="goal-del" data-gid="${g.id}" title="削除">×</button>
+          </div>
+        </div>`).join('')
+      : `<div class="goal-empty"><div class="goal-empty-icon">${em.icon}</div><div class="goal-empty-text">${em.text.replace(/\n/g,'<br>')}</div></div>`;
+    html+=`<div class="goals-horizon" id="gh-${h.key}">
+      <div class="goals-horizon-banner" style="background:${GRADS[h.key]}">
+        <div class="goals-horizon-top">
+          <span class="goals-horizon-icon">${h.icon}</span>
+          <div class="goals-horizon-info">
+            <div class="goals-horizon-label">${h.label}</div>
+            <div class="goals-horizon-sub">${h.sub}</div>
+          </div>
+          ${goals.length?`<span class="goals-horizon-count">${goals.length}</span>`:''}
+        </div>
       </div>
-      <div class="goal-list" id="glist-${h.key}">
-        ${goals.length ? goals.map(g=>goalCardHtml(g,h.color)).join('') : `<div class="goal-empty">まだ設定されていません</div>`}
-      </div>
-      <button class="goal-add-trigger" data-hadd="${h.key}">＋ ${h.label}を追加する</button>`;
-    wrap.appendChild(sec);
+      <div class="goals-horizon-body">${cardsHtml}</div>
+      <button class="goal-add-trigger" data-hadd="${h.key}">＋ ${h.label}を追加する</button>
+    </div>`;
   });
-  wrap.querySelectorAll('[data-hadd]').forEach(btn=>btn.addEventListener('click',()=>showGoalForm(btn.dataset.hadd,btn)));
-  wrap.querySelectorAll('.goal-del').forEach(b=>b.addEventListener('click',()=>deleteGoal(b.dataset.gid)));
+  html+='</div>';
+  body.innerHTML=html;
+  document.querySelectorAll('[data-hadd]').forEach(btn=>btn.addEventListener('click',()=>showGoalForm(btn.dataset.hadd,btn)));
+  document.querySelectorAll('.goal-del').forEach(b=>b.addEventListener('click',()=>deleteGoal(b.dataset.gid)));
 }
-function goalCardHtml(g,color){
-  return `<div class="goal-card">
-    <div class="goal-card-left" style="background:${color}"></div>
-    <div class="goal-card-body">
-      <div class="goal-card-text">${esc(g.text)}</div>
-      ${g.note?`<div class="goal-card-note">${esc(g.note)}</div>`:''}
-      <div class="goal-card-date">${fmtDate(g.createdAt?.slice?.(0,10)||g.createdAt)}</div>
-    </div>
-    <button class="goal-del" data-gid="${g.id}">×</button>
-  </div>`;
-}
-function showGoalForm(horizonKey, triggerBtn){
+function showGoalForm(horizonKey,triggerBtn){
   const h=HORIZONS.find(x=>x.key===horizonKey);
   const form=document.createElement('div');
   form.className='goal-add-form';
   form.innerHTML=`
     <textarea id="gText" placeholder="${h.label}を入力…" rows="2"></textarea>
-    <textarea class="note-ta" id="gNote" placeholder="補足・背景・なぜそれを目指すのか（任意）" rows="2"></textarea>
+    <textarea class="note-ta" id="gNote" placeholder="なぜこの目標を目指すのか、背景や想いを書いてみよう（任意）" rows="3"></textarea>
     <div class="goal-add-btns">
-      <button class="btn btn-accent" id="btnGSave">保存する</button>
+      <button class="btn btn-accent" id="btnGSave">✓ 保存する</button>
       <button class="btn btn-ghost" id="btnGCancel">キャンセル</button>
     </div>`;
   triggerBtn.replaceWith(form);
